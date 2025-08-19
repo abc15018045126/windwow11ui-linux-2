@@ -1,13 +1,13 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ClipboardItem, FilesystemItem } from './types';
-import * as FsService from './services/filesystemService';
-import Taskbar from './window/components/Taskbar';
-import StartMenu from './window/components/StartMenu';
-import AppWindow from './window/components/AppWindow';
-import Desktop from './window/components/Desktop';
-import { ThemeContext, themes } from './components/theme';
-import { AppContext } from './components/AppContext';
-import { useWindowManager } from './window/hooks/useWindowManager';
+import * as FsService from '../services/filesystemService';
+import Taskbar from './components/Taskbar';
+import StartMenu from './components/StartMenu';
+import AppWindow from './components/AppWindow';
+import Desktop from './components/Desktop';
+import { ThemeContext, themes } from './theme';
+import { AppContext } from './contexts/AppContext';
+import { useWindowManager } from './hooks/useWindowManager';
 
 const App: React.FC = () => {
   const desktopRef = useRef<HTMLDivElement>(null);
@@ -27,11 +27,11 @@ const App: React.FC = () => {
 
   const [isStartMenuOpen, setIsStartMenuOpen] = useState<boolean>(false);
   const [clipboard, setClipboard] = useState<ClipboardItem | null>(null);
-  
+
   // --- Theme State ---
   const [currentThemeId, setCurrentThemeId] = useState<'default' | 'light'>('default');
   const theme = themes[currentThemeId];
-  
+
   const handleThemeChange = (themeId: 'default' | 'light') => {
     setCurrentThemeId(themeId);
   };
@@ -41,7 +41,7 @@ const App: React.FC = () => {
   const triggerRefresh = () => setRefreshId(id => id + 1);
 
   const toggleStartMenu = useCallback(() => setIsStartMenuOpen(prev => !prev), []);
-  
+
   // --- Filesystem Operations ---
   const handleCopy = useCallback((item: FilesystemItem) => {
     setClipboard({ item, operation: 'copy' });
@@ -52,7 +52,7 @@ const App: React.FC = () => {
   const handlePaste = useCallback(async (destinationPath: string) => {
     if (!clipboard) return;
     const { item, operation } = clipboard;
-    
+
     if (operation === 'copy') {
         await FsService.copyItem(item, destinationPath);
     } else { // cut
@@ -61,7 +61,7 @@ const App: React.FC = () => {
     }
     triggerRefresh();
   }, [clipboard]);
-  
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isStartMenuOpen) {

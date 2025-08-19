@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { AppDefinition, AppComponentProps } from '../../types';
-import { SettingsIcon } from '../../constants';
-import { useTheme, themes } from '../theme';
+import { AppDefinition, AppComponentProps } from '../../../window/types';
+import { SettingsIcon } from '../../../window/constants';
+import { useTheme, themes } from '../../window/theme';
 
 const SettingsApp: React.FC<AppComponentProps> = ({ setTitle, onWallpaperChange }) => {
   const { theme, setTheme } = useTheme();
