@@ -3,9 +3,8 @@ import { FilesystemItem, AppComponentProps, ClipboardItem } from '../types';
 import * as FsService from '../../services/filesystemService';
 import ContextMenu, { ContextMenuItem } from './ContextMenu';
 import { TASKBAR_HEIGHT } from '../constants';
-import { FolderIcon, FileCodeIcon, FileJsonIcon, FileGenericIcon, NotebookIcon } from '../constants';
-import { APP_DEFINITIONS } from '../../components/apps';
 import { AppContext } from '../contexts/AppContext';
+import Icon from './icon';
 
 
 const GRID_SIZE = 90;
@@ -19,30 +18,28 @@ interface DesktopIconState {
 interface DesktopProps extends Pick<AppComponentProps, 'openApp' | 'clipboard' | 'handleCopy' | 'handleCut' | 'handlePaste'> {}
 
 
-const getFileIcon = (item: FilesystemItem) => {
-    if (item.name.endsWith('.app') && item.content) {
+// Helper component to determine the correct icon
+const DesktopItemIcon: React.FC<{ item: FilesystemItem }> = ({ item }) => {
+    let iconName = 'fileGeneric';
+
+    if (item.type === 'folder') {
+        iconName = 'folder';
+    } else if (item.name.endsWith('.app') && item.content) {
         try {
             const appInfo = JSON.parse(item.content);
             if (appInfo.icon) {
-                const appDef = APP_DEFINITIONS.find(def => def.id === appInfo.icon);
-                if (appDef) return <appDef.icon className="w-10 h-10 mb-1 pointer-events-none" />;
+                iconName = appInfo.icon;
             }
-        } catch (e) { /* Fallback to generic icon on parse error */ }
-    } else if (item.type === 'folder') {
-        // This case is handled in the main render function, but added for clarity
-        return <FolderIcon className="w-10 h-10 text-amber-400" />;
+        } catch (e) { /* use default */ }
+    } else {
+        // Determine icon by file extension
+        if (item.name.endsWith('.tsx') || item.name.endsWith('.ts') || item.name.endsWith('.html')) iconName = 'fileCode';
+        else if (item.name.endsWith('.json')) iconName = 'fileJson';
+        else if (item.name.endsWith('.txt') || item.name.endsWith('.md')) iconName = 'notebook';
     }
 
-    // Fallback for other file types or if app icon not found
-    const filename = item.name;
-    if (filename.endsWith('.tsx') || filename.endsWith('.ts')) return <FileCodeIcon className="w-10 h-10 text-cyan-400" />;
-    if (filename.endsWith('.json')) return <FileJsonIcon className="w-10 h-10 text-yellow-400" />;
-    if (filename.endsWith('.html')) return <FileCodeIcon className="w-10 h-10 text-orange-500" />;
-    if (filename.endsWith('.txt') || filename.endsWith('.md')) return <NotebookIcon isSmall className="w-10 h-10 text-zinc-300" />;
-
-    // Default generic icon
-    return <FileGenericIcon className="w-10 h-10 text-zinc-400" />;
-}
+    return <Icon iconName={iconName} className="w-10 h-10 mb-1 pointer-events-none" />;
+};
 
 
 const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handleCut, handlePaste }) => {
@@ -139,17 +136,7 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
     if (item.name.endsWith('.app') && item.content) {
         try {
             const appInfo = JSON.parse(item.content);
-            if (appInfo.external) {
-                // @ts-ignore
-                if (window.electronAPI?.launchExternalApp) {
-                    // @ts-ignore
-                    window.electronAPI.launchExternalApp(appInfo.path);
-                } else {
-                    alert('Launching external apps is only supported in the desktop version.');
-                }
-            } else {
-                openApp?.(appInfo);
-            }
+            openApp?.(appInfo);
         } catch(e) { console.error("Could not parse app shortcut", e); }
     } else if (item.type === 'file') {
         openApp?.('notebook', { file: { path: item.path, name: item.name } });
@@ -176,7 +163,7 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
     const icon = icons.find(i => i.id === renamingIconId);
     if (icon && renameValue && icon.item.name !== renameValue) {
         await FsService.renameItem(icon.item, renameValue);
-        await fetchDesktopItems();
+        fetchDesktopItems();
     }
     setRenamingIconId(null);
   };
@@ -202,10 +189,8 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
       const menuItems: ContextMenuItem[] = [];
 
       if (selectedItem.type === 'file') {
-        // Default "Open"
         menuItems.push({ type: 'item', label: 'Open', onClick: () => handleDoubleClick(selectedItem) });
 
-        // "Open with..." options
         const fileHandlers = apps.filter(app => app.handlesFiles);
         if (fileHandlers.length > 0) {
           menuItems.push({ type: 'separator' });
@@ -218,7 +203,6 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
           });
         }
       } else {
-        // For folders and .app files
         menuItems.push({ type: 'item', label: 'Open', onClick: () => handleDoubleClick(selectedItem) });
       }
 
@@ -245,7 +229,7 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
       ];
     }
     return [];
-  }, [contextMenu, openApp, clipboard, handleCopy, handleCut, handlePaste, fetchDesktopItems]);
+  }, [contextMenu, openApp, clipboard, handleCopy, handleCut, handlePaste, fetchDesktopItems, apps]);
 
   const handleDesktopClick = (e: React.MouseEvent) => {
     if (e.target === desktopRef.current) {
@@ -282,9 +266,7 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
           onContextMenu={e => handleIconContextMenu(e, icon)}
           title={icon.item.name}
         >
-          {icon.item.type === 'folder' 
-            ? <FolderIcon className="w-10 h-10 text-amber-400 mb-1 pointer-events-none" />
-            : getFileIcon(icon.item)}
+          <DesktopItemIcon item={icon.item} />
           
           {renamingIconId === icon.id ? (
             <input 
@@ -293,7 +275,7 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
               onChange={e => setRenameValue(e.target.value)}
               onBlur={handleRename}
               onKeyDown={e => e.key === 'Enter' && handleRename()}
-              className="text-xs text-center text-black bg-white w-full border border-blue-500"
+              className="text-xs text-center text-black bg-white w-full border border-blue-500 mt-1.5"
               autoFocus
               onFocus={e => e.target.select()}
             />

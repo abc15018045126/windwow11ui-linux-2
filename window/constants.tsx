@@ -191,3 +191,39 @@ export const BatteryIcon: React.FC<AppIconProps> = ({ className = "w-5 h-5" }) =
 export const TASKBAR_HEIGHT = 48; // in pixels
 export const DEFAULT_WINDOW_WIDTH = 600;
 export const DEFAULT_WINDOW_HEIGHT = 400;
+
+export const GeminiIcon: React.FC<AppIconProps> = ({ className = "w-6 h-6", isSmall }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={isSmall ? "w-5 h-5" : className}>
+        <path d="M12 2.25a.75.75 0 0 1 .75.75v3.023c0 .38-.158.75-.44 1.032l-3.033 3.033a1.5 1.5 0 0 1-2.122 0l-3.033-3.033A1.5 1.5 0 0 1 4.23 6.023V3a.75.75 0 0 1 .75-.75h6zm-3.75 9a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 .75.75h3.023c.38 0 .75-.158 1.032-.44l3.033-3.033a1.5 1.5 0 0 0 0-2.122l-3.033-3.033a1.5 1.5 0 0 0-1.032-.44H8.25zm9-3.75a.75.75 0 0 1 .75.75v3.023c0 .38.158.75.44 1.032l3.033 3.033a1.5 1.5 0 0 1 0 2.122l-3.033 3.033a1.5 1.5 0 0 1-1.032.44h-3.023a.75.75 0 0 1-.75-.75v-6a.75.75 0 0 1 .75-.75h3.023c-.38 0-.75.158-1.032.44l-3.033 3.033a1.5 1.5 0 0 0 0 2.122l3.033 3.033a1.5 1.5 0 0 0 1.032.44h.001z" />
+    </svg>
+);
+
+export const LightbulbIcon: React.FC<AppIconProps> = ({ className = "w-6 h-6", isSmall }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={isSmall ? "w-5 h-5" : className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.311a15.045 15.045 0 01-7.5 0C4.508 19.64 2.25 15.223 2.25 10.5 2.25 6.23 5.78 3 10.125 3c4.345 0 7.875 3.23 7.875 7.5 0 4.723-2.258 9.14-6.375 10.655z" />
+    </svg>
+);
+
+export const UserIcon: React.FC<AppIconProps> = ({ className = "w-6 h-6", isSmall }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={isSmall ? "w-5 h-5" : className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+    </svg>
+);
+
+export const CopyIcon: React.FC<AppIconProps> = ({ className = "w-6 h-6", isSmall }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={isSmall ? "w-5 h-5" : className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375m0-13.5h3.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-3.375m0-13.5V7.875c0-.621.504-1.125 1.125-1.125H6.75" />
+    </svg>
+);
+
+export const CheckIcon: React.FC<AppIconProps> = ({ className = "w-6 h-6", isSmall }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={isSmall ? "w-5 h-5" : className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+    </svg>
+);
+
+export const AppStoreIcon: React.FC<AppIconProps> = ({ className = "w-6 h-6", isSmall }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={isSmall ? "w-5 h-5" : className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.658-.463 1.243-1.119 1.243H4.452c-.656 0-1.19-.585-1.119-1.243l1.263-12a1.125 1.125 0 011.12-1.007h8.898c.613 0 1.12.47 1.12 1.007z" />
+    </svg>
+);

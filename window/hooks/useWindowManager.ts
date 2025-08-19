@@ -95,6 +95,7 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
 
     const newApp: OpenApp = {
       ...appDef,
+      icon: appInfo.icon, // Pass the icon name string
       instanceId,
       zIndex: newZIndex,
       position: getNextPosition(defaultWidth, defaultHeight),
