@@ -2,25 +2,29 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AppDefinition, AppComponentProps } from '../../types';
 import { Browser5Icon } from '../../constants';
 
+type Status = 'Connecting...' | 'Connected' | 'Disconnected' | 'Error';
+
 const Chrome5App: React.FC<AppComponentProps> = ({ setTitle: setWindowTitle }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const wsRef = useRef<WebSocket | null>(null);
+    const [status, setStatus] = useState<Status>('Connecting...');
 
     useEffect(() => {
-        // Launch the backend process
         if (window.electronAPI) {
             window.electronAPI.launchExternal('components/apps/Chrome5');
         } else {
             console.warn('electronAPI not available. Cannot launch Chrome5 backend.');
+            setStatus('Error');
             return;
         }
 
-        // Wait a moment for the server to start, then connect.
         const connectWebSocket = () => {
             wsRef.current = new WebSocket('ws://localhost:8081');
+            setStatus('Connecting...');
 
             wsRef.current.onopen = () => {
                 console.log('Chrome5 WebSocket connected.');
+                setStatus('Connected');
                 setWindowTitle('Chrome 5');
             };
 
@@ -29,6 +33,7 @@ const Chrome5App: React.FC<AppComponentProps> = ({ setTitle: setWindowTitle }) =
                 if (!canvas) return;
 
                 if (event.data instanceof Blob) {
+                    if (status !== 'Connected') setStatus('Connected');
                     const ctx = canvas.getContext('2d');
                     if (!ctx) return;
 
@@ -55,21 +60,22 @@ const Chrome5App: React.FC<AppComponentProps> = ({ setTitle: setWindowTitle }) =
 
             wsRef.current.onclose = () => {
                 console.log('Chrome5 WebSocket disconnected.');
-                // Optional: attempt to reconnect
+                setStatus('Disconnected');
             };
 
             wsRef.current.onerror = (error) => {
                 console.error('Chrome5 WebSocket error:', error);
+                setStatus('Error');
             };
         };
 
-        const timeoutId = setTimeout(connectWebSocket, 1000); // 1-second delay
+        const timeoutId = setTimeout(connectWebSocket, 1500); // Increased delay
 
         return () => {
             clearTimeout(timeoutId);
             wsRef.current?.close();
         };
-    }, [setWindowTitle]);
+    }, [setWindowTitle, status]);
 
     const sendInput = (payload: any) => {
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -110,6 +116,11 @@ const Chrome5App: React.FC<AppComponentProps> = ({ setTitle: setWindowTitle }) =
     return (
         <div className="flex flex-col h-full bg-black">
             <div className="flex-grow relative">
+                {status !== 'Connected' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80 text-white text-2xl z-10">
+                        {status}
+                    </div>
+                )}
                 {window.electronAPI ? (
                     <canvas
                         ref={canvasRef}
@@ -121,7 +132,7 @@ const Chrome5App: React.FC<AppComponentProps> = ({ setTitle: setWindowTitle }) =
                         onWheel={handleWheelEvent}
                         onKeyDown={handleKeyEvent}
                         onKeyUp={handleKeyEvent}
-                        tabIndex={0} // Make canvas focusable
+                        tabIndex={0}
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-400">

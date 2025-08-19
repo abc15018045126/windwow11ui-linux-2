@@ -22,7 +22,7 @@ function createWindow() {
     }
   });
 
-  win.loadURL('https://github.com');
+  win.loadURL('http://localhost:3000');
 
   win.webContents.on('did-finish-load', () => {
     const zoomFactor = win.webContents.getZoomFactor();
