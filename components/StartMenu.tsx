@@ -1,16 +1,25 @@
 
-import React, { useState, useMemo } from 'react';
-import { AppDefinition } from '../types';
-import { SearchIcon, SettingsIcon, StartIcon as PowerIcon } from '../constants'; // Reusing StartIcon as PowerIcon for simplicity
+import React, { useState, useMemo, useContext } from 'react';
+import { DiscoveredAppDefinition, AppContext } from './AppContext';
+import { APP_DEFINITIONS } from './apps';
+import { SearchIcon, SettingsIcon, StartIcon as PowerIcon, FileGenericIcon } from '../constants';
 import { useTheme } from './theme';
 
 interface StartMenuProps {
-  apps: AppDefinition[];
-  onOpenApp: (appId: string) => void;
+  onOpenApp: (app: DiscoveredAppDefinition) => void;
   onClose: () => void;
 }
 
-const StartMenu: React.FC<StartMenuProps> = ({ apps, onOpenApp, onClose }) => {
+const getIconComponent = (iconId?: string) => {
+    if (iconId) {
+        const appDef = APP_DEFINITIONS.find(def => def.id === iconId);
+        if (appDef) return appDef.icon;
+    }
+    return FileGenericIcon;
+};
+
+const StartMenu: React.FC<StartMenuProps> = ({ onOpenApp, onClose }) => {
+  const { apps } = useContext(AppContext);
   const [isShowingAllApps, setIsShowingAllApps] = useState(false);
   const { theme } = useTheme();
 
@@ -58,17 +67,20 @@ const StartMenu: React.FC<StartMenuProps> = ({ apps, onOpenApp, onClose }) => {
             </div>
             <div className="flex-grow overflow-y-auto custom-scrollbar -mr-4 pr-4">
               <div className="space-y-1">
-                {sortedApps.map(app => (
-                  <button
-                    key={`all-${app.id}`}
-                    onClick={() => { onOpenApp(app.id); onClose(); }}
-                    className={`w-full flex items-center p-2 rounded-md transition-colors ${theme.startMenu.buttonHover}`}
-                    title={app.name}
-                  >
-                    <app.icon className="w-6 h-6 mr-4 flex-shrink-0" />
-                    <span className="text-sm text-left truncate">{app.name}</span>
-                  </button>
-                ))}
+                {sortedApps.map(app => {
+                  const IconComponent = getIconComponent(app.icon);
+                  return (
+                    <button
+                      key={`all-${app.id}`}
+                      onClick={() => { onOpenApp(app); onClose(); }}
+                      className={`w-full flex items-center p-2 rounded-md transition-colors ${theme.startMenu.buttonHover}`}
+                      title={app.name}
+                    >
+                      <IconComponent className="w-6 h-6 mr-4 flex-shrink-0" />
+                      <span className="text-sm text-left truncate">{app.name}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -86,33 +98,39 @@ const StartMenu: React.FC<StartMenuProps> = ({ apps, onOpenApp, onClose }) => {
                 </button>
               </div>
               <div className="grid grid-cols-6 gap-4">
-                {pinnedApps.map(app => (
-                  <button
-                    key={app.id}
-                    onClick={() => { onOpenApp(app.id); onClose(); }}
-                    className={`flex flex-col items-center justify-center p-2 rounded-md transition-colors aspect-square ${theme.startMenu.pinnedButton}`}
-                    title={app.name}
-                  >
-                    <app.icon className="w-8 h-8 mb-1.5" />
-                    <span className="text-xs text-center truncate w-full">{app.name}</span>
-                  </button>
-                ))}
+                {pinnedApps.map(app => {
+                  const IconComponent = getIconComponent(app.icon);
+                  return (
+                    <button
+                      key={app.id}
+                      onClick={() => { onOpenApp(app); onClose(); }}
+                      className={`flex flex-col items-center justify-center p-2 rounded-md transition-colors aspect-square ${theme.startMenu.pinnedButton}`}
+                      title={app.name}
+                    >
+                      <IconComponent className="w-8 h-8 mb-1.5" />
+                      <span className="text-xs text-center truncate w-full">{app.name}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div>
               <h2 className="text-sm font-semibold opacity-80 mb-3">Recommended</h2>
               <div className="space-y-2">
-                {recommendedApps.map(app => (
-                  <button
-                    key={`rec-${app.id}`}
-                    onClick={() => { onOpenApp(app.id); onClose(); }}
-                    className={`w-full flex items-center p-2 rounded-md transition-colors ${theme.startMenu.buttonHover}`}
-                    title={app.name}
-                  >
-                    <app.icon className="w-6 h-6 mr-3 flex-shrink-0" />
-                    <span className="text-sm text-left truncate">{app.name}</span>
-                  </button>
-                ))}
+                {recommendedApps.map(app => {
+                  const IconComponent = getIconComponent(app.icon);
+                  return (
+                    <button
+                      key={`rec-${app.id}`}
+                      onClick={() => { onOpenApp(app); onClose(); }}
+                      className={`w-full flex items-center p-2 rounded-md transition-colors ${theme.startMenu.buttonHover}`}
+                      title={app.name}
+                    >
+                      <IconComponent className="w-6 h-6 mr-3 flex-shrink-0" />
+                      <span className="text-sm text-left truncate">{app.name}</span>
+                    </button>
+                  );
+                })}
                 {recommendedApps.length === 0 && <p className="text-xs text-zinc-400">No recommendations yet.</p>}
               </div>
             </div>
@@ -127,7 +145,15 @@ const StartMenu: React.FC<StartMenuProps> = ({ apps, onOpenApp, onClose }) => {
           <span className="text-sm">User</span>
         </button>
         <div className="flex space-x-1">
-          <button title="Settings" onClick={() => { onOpenApp('settings'); onClose(); }} className={`p-2 rounded-md ${theme.startMenu.buttonHover}`}>
+          <button
+            title="Settings"
+            onClick={() => {
+              const settingsApp = apps.find(app => app.appId === 'settings');
+              if (settingsApp) onOpenApp(settingsApp);
+              onClose();
+            }}
+            className={`p-2 rounded-md ${theme.startMenu.buttonHover}`}
+          >
             <SettingsIcon className="w-5 h-5" />
           </button>
           <button title="Power (Placeholder)" className={`p-2 rounded-md ${theme.startMenu.buttonHover}`}>

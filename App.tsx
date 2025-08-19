@@ -8,6 +8,7 @@ import StartMenu from './components/StartMenu';
 import AppWindow from './components/AppWindow';
 import Desktop from './components/Desktop';
 import { ThemeContext, themes } from './components/theme';
+import { AppContext, DiscoveredAppDefinition } from './components/AppContext';
 
 const App: React.FC = () => {
   const [openApps, setOpenApps] = useState<OpenApp[]>([]);
@@ -16,6 +17,20 @@ const App: React.FC = () => {
   const [isStartMenuOpen, setIsStartMenuOpen] = useState<boolean>(false);
   const [clipboard, setClipboard] = useState<ClipboardItem | null>(null);
   const desktopRef = useRef<HTMLDivElement>(null);
+  const [discoveredApps, setDiscoveredApps] = useState<DiscoveredAppDefinition[]>([]);
+
+  useEffect(() => {
+    const fetchApps = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/apps');
+        const apps = await response.json();
+        setDiscoveredApps(apps);
+      } catch (error) {
+        console.error("Failed to fetch apps:", error);
+      }
+    };
+    fetchApps();
+  }, []);
   
   // --- Theme State ---
   const [currentThemeId, setCurrentThemeId] = useState<'default' | 'light'>('default');
@@ -52,43 +67,32 @@ const App: React.FC = () => {
     };
   };
 
-  const openApp = useCallback(async (appId: string, initialData?: any) => {
-    const appDef = APP_DEFINITIONS.find(app => app.id === appId);
-    if (!appDef) return;
-
-    if (appDef.isExternal && appDef.externalPath) {
-      const args = initialData?.args || [];
-      // Prioritize the native Electron API if available
-      if ((window as any).electronAPI?.launchExternalApp) {
-        (window as any).electronAPI.launchExternalApp(appDef.externalPath, args);
+  const openApp = useCallback(async (appInfo: DiscoveredAppDefinition, initialData?: any) => {
+    // Handle external apps
+    if (appInfo.external && appInfo.path) {
+      // @ts-ignore
+      if (window.electronAPI?.launchExternalApp) {
+        // @ts-ignore
+        window.electronAPI.launchExternalApp(appInfo.path);
       } else {
-        // Fallback to the web API for remote/browser clients
-        try {
-          const response = await fetch('http://localhost:3001/api/launch', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: appDef.externalPath, args }),
-          });
-          if (!response.ok) {
-            console.error('Failed to launch external app via API');
-            alert('Failed to launch the application. The backend server might not be running or an error occurred.');
-          }
-        } catch (error) {
-          console.error('Error calling launch API:', error);
-          alert('Could not connect to the backend server to launch the application.');
-        }
+        alert('Launching external apps is only supported in the desktop version.');
       }
       setIsStartMenuOpen(false);
       return;
     }
 
+    // Handle internal apps
+    if (!appInfo.appId) return;
+    const appDef = APP_DEFINITIONS.find(app => app.id === appInfo.appId);
+    if (!appDef) return;
+
     if (!initialData) {
-      const existingAppInstance = openApps.find(app => app.id === appId && !app.isMinimized);
+      const existingAppInstance = openApps.find(app => app.id === appInfo.appId && !app.isMinimized);
       if (existingAppInstance) {
         focusApp(existingAppInstance.instanceId);
         return;
       }
-      const minimizedInstance = openApps.find(app => app.id === appId && app.isMinimized);
+      const minimizedInstance = openApps.find(app => app.id === appInfo.appId && app.isMinimized);
       if (minimizedInstance) {
         toggleMinimizeApp(minimizedInstance.instanceId);
         return;
@@ -248,53 +252,53 @@ const App: React.FC = () => {
 
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme: handleThemeChange }}>
-      <div 
-        ref={desktopRef}
-        className="h-screen w-screen flex flex-col bg-cover bg-center" 
-        style={{ backgroundImage: `url(${theme.wallpaper})` }}
-      >
-        <div className="flex-grow relative overflow-hidden">
-          <Desktop 
-              openApp={openApp} 
-              clipboard={clipboard} 
-              handleCopy={handleCopy}
-              handleCut={handleCut}
-              handlePaste={handlePaste}
-              key={refreshId} // Force remount on refresh
-          />
-          {openApps.filter(app => !app.isMinimized).map(app => (
-            <AppWindow
-              key={app.instanceId}
-              app={{...app, initialData: {...app.initialData, refreshId, triggerRefresh}}}
-              onClose={() => closeApp(app.instanceId)}
-              onMinimize={() => toggleMinimizeApp(app.instanceId)}
-              onMaximize={() => toggleMaximizeApp(app.instanceId)}
-              onFocus={() => focusApp(app.instanceId)}
-              onDrag={updateAppPosition}
-              onResize={updateAppSize}
-              isActive={app.instanceId === activeAppInstanceId}
-              desktopRef={desktopRef}
-              onSetTitle={(newTitle) => updateAppTitle(app.instanceId, newTitle)}
-              onWallpaperChange={handleWallpaperChange}
-              openApp={openApp}
-              clipboard={clipboard}
-              handleCopy={handleCopy}
-              handleCut={handleCut}
-              handlePaste={handlePaste}
+    <AppContext.Provider value={{ apps: discoveredApps }}>
+      <ThemeContext.Provider value={{ theme, setTheme: handleThemeChange }}>
+        <div
+          ref={desktopRef}
+          className="h-screen w-screen flex flex-col bg-cover bg-center"
+          style={{ backgroundImage: `url(${theme.wallpaper})` }}
+        >
+          <div className="flex-grow relative overflow-hidden">
+            <Desktop
+                openApp={openApp}
+                clipboard={clipboard}
+                handleCopy={handleCopy}
+                handleCut={handleCut}
+                handlePaste={handlePaste}
+                key={refreshId} // Force remount on refresh
             />
-          ))}
-        </div>
+            {openApps.filter(app => !app.isMinimized).map(app => (
+              <AppWindow
+                key={app.instanceId}
+                app={{...app, initialData: {...app.initialData, refreshId, triggerRefresh}}}
+                onClose={() => closeApp(app.instanceId)}
+                onMinimize={() => toggleMinimizeApp(app.instanceId)}
+                onMaximize={() => toggleMaximizeApp(app.instanceId)}
+                onFocus={() => focusApp(app.instanceId)}
+                onDrag={updateAppPosition}
+                onResize={updateAppSize}
+                isActive={app.instanceId === activeAppInstanceId}
+                desktopRef={desktopRef}
+                onSetTitle={(newTitle) => updateAppTitle(app.instanceId, newTitle)}
+                onWallpaperChange={handleWallpaperChange}
+                openApp={openApp}
+                clipboard={clipboard}
+                handleCopy={handleCopy}
+                handleCut={handleCut}
+                handlePaste={handlePaste}
+              />
+            ))}
+          </div>
 
-        {isStartMenuOpen && (
-          <StartMenu
-            apps={APP_DEFINITIONS}
-            onOpenApp={openApp}
-            onClose={() => setIsStartMenuOpen(false)}
-          />
-        )}
+          {isStartMenuOpen && (
+            <StartMenu
+              onOpenApp={openApp}
+              onClose={() => setIsStartMenuOpen(false)}
+            />
+          )}
 
-        <Taskbar
+          <Taskbar
           openApps={openApps}
           activeAppInstanceId={activeAppInstanceId}
           onToggleStartMenu={toggleStartMenu}
