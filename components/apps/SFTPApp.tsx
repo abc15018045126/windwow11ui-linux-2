@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { AppComponentProps, AppDefinition, FilesystemItem as BaseFilesystemItem } from '../../../window/types';
-import { FolderIcon, FileGenericIcon, SftpIcon } from '../../../window/constants';
+import { AppComponentProps, AppDefinition, FilesystemItem as BaseFilesystemItem } from '../../window/types';
+import { FolderIcon, FileGenericIcon, SftpIcon } from '../../window/constants';
 import ContextMenu, { ContextMenuItem } from '../../window/components/ContextMenu';
 
 const pathHelper = {

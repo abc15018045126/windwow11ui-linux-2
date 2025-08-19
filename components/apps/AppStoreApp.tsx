@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AppDefinition, AppComponentProps } from '../../../window/types';
-import { AppStoreIcon, RefreshIcon } from '../../../window/constants';
-import * as FsService from '../../../services/filesystemService';
+import { AppDefinition, AppComponentProps } from '../../window/types';
+import { AppStoreIcon, RefreshIcon } from '../../window/constants';
+import * as FsService from '../../services/filesystemService';
 import { APP_DEFINITIONS } from '..';
 
 const AppStoreApp: React.FC<AppComponentProps> = ({ setTitle, initialData }) => {

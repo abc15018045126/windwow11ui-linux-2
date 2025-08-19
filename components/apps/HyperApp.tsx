@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AppComponentProps, AppDefinition } from '../../../window/types';
-import { generateGeminiResponse } from '../../../services/geminiService';
-import { HyperIcon } from '../../../window/constants';
+import { AppComponentProps, AppDefinition } from '../../window/types';
+import { generateGeminiResponse } from '../../services/geminiService';
+import { HyperIcon } from '../../window/constants';
 
 interface Line {
   type: 'input' | 'output';

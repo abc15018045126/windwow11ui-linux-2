@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { AppDefinition, AppComponentProps, FilesystemItem } from '../../../window/types';
-import * as FsService from '../../../services/filesystemService';
-import { FolderIcon, FileCodeIcon, FileJsonIcon, FileGenericIcon, StarIcon, NotebookIcon, FileExplorerIcon } from '../../../window/constants';
+import { AppDefinition, AppComponentProps, FilesystemItem } from '../../window/types';
+import * as FsService from '../../services/filesystemService';
+import { FolderIcon, FileCodeIcon, FileJsonIcon, FileGenericIcon, StarIcon, NotebookIcon, FileExplorerIcon } from '../../window/constants';
 import ContextMenu, { ContextMenuItem } from '../../window/components/ContextMenu';
 
 const getFileIcon = (filename: string) => {

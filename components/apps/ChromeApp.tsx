@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AppDefinition, AppComponentProps } from '../../../window/types';
-import { BrowserIcon } from '../../../window/constants';
+import { AppDefinition, AppComponentProps } from '../../window/types';
+import { BrowserIcon } from '../../window/constants';
 
 // --- SVG Icons for Browser Controls ---
 const BackIcon: React.FC = () => (

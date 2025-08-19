@@ -1,6 +1,6 @@
 
 
-import type { AppDefinition } from '../../../window/types';
+import type { AppDefinition } from '../../window/types';
 
 import { appDefinition as aboutAppDefinition } from './AboutApp';
 import { appDefinition as fileExplorerAppDefinition } from './FileExplorerApp';
