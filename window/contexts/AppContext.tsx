@@ -10,6 +10,7 @@ export interface DiscoveredAppDefinition {
   appId?: string;
   icon?: string;
   handlesFiles?: boolean;
+  isPinned?: boolean;
 }
 
 export interface AppContextType {

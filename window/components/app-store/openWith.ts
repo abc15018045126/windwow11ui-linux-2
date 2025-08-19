@@ -1,6 +1,6 @@
-import { FilesystemItem } from '../../types';
-import { ContextMenuItem } from '../ContextMenu';
-import { DiscoveredAppDefinition } from '../../contexts/AppContext';
+import { FilesystemItem } from '@kernel/types';
+import { ContextMenuItem } from '@kernel/components/ContextMenu';
+import { DiscoveredAppDefinition } from '@kernel/contexts/AppContext';
 
 type OpenAppFunction = (appIdentifier: string | DiscoveredAppDefinition, initialData?: any) => void;
 

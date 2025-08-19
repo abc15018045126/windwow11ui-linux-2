@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { AppDefinition, AppComponentProps, FilesystemItem } from '../../window/types';
-import Icon from '../../window/components/icon';
+import { AppDefinition, AppComponentProps, FilesystemItem } from '@kernel/types';
+import Icon from '@kernel/components/icon';
 
 const PropertiesApp: React.FC<AppComponentProps> = ({ setTitle, initialData }) => {
   const item = initialData?.item as FilesystemItem | undefined;
@@ -17,10 +17,20 @@ const PropertiesApp: React.FC<AppComponentProps> = ({ setTitle, initialData }) =
     return <div className="p-4">No item selected.</div>;
   }
 
+  let iconName = 'fileGeneric';
+  if (item.type === 'folder') {
+    iconName = 'folder';
+  } else if (item.name.endsWith('.app') && item.content) {
+      try {
+          const appInfo = JSON.parse(item.content);
+          if (appInfo.icon) iconName = appInfo.icon;
+      } catch (e) {}
+  }
+
   return (
     <div className="p-4 text-sm">
       <div className="flex items-center mb-4">
-        <Icon iconName={item.type === 'folder' ? 'folder' : 'fileGeneric'} className="w-8 h-8 mr-4" />
+        <Icon iconName={iconName} className="w-8 h-8 mr-4" />
         <span className="font-bold text-lg">{item.name}</span>
       </div>
       <div className="space-y-2">
@@ -32,7 +42,6 @@ const PropertiesApp: React.FC<AppComponentProps> = ({ setTitle, initialData }) =
           <span className="w-24 font-semibold">Path:</span>
           <span className="break-all">{item.path}</span>
         </div>
-        {/* Add more properties like size, date created, etc. later */}
       </div>
     </div>
   );
@@ -42,9 +51,8 @@ export const appDefinition: AppDefinition = {
   id: 'properties',
   name: 'Properties',
   component: PropertiesApp,
+  icon: 'fileGeneric',
   defaultSize: { width: 400, height: 250 },
-  // This app shouldn't be pinnable or directly launchable from the start menu
-  isPinnedToTaskbar: false,
 };
 
 export default PropertiesApp;

@@ -1,6 +1,6 @@
 
 
-import type { AppDefinition } from '../../window/types';
+import type { AppDefinition } from '../../types';
 
 import { appDefinition as aboutAppDefinition } from './AboutApp';
 import { appDefinition as fileExplorerAppDefinition } from './FileExplorerApp';
@@ -17,7 +17,6 @@ import { appDefinition as terminusSshAppDefinition } from './TerminusSshApp';
 import { appDefinition as sftpAppDefinition } from './SFTPApp';
 import { appDefinition as appStoreAppDefinition } from './AppStoreApp';
 import { appDefinition as themeAppDefinition } from './ThemeApp';
-import { appDefinition as propertiesAppDefinition } from './PropertiesApp';
 
 /**
  * The master list of all applications available in the OS.
@@ -42,5 +41,4 @@ export const APP_DEFINITIONS: AppDefinition[] = [
   settingsAppDefinition,
   notebookAppDefinition,
   aboutAppDefinition,
-  propertiesAppDefinition,
 ];

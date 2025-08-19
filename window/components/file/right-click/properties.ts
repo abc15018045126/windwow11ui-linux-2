@@ -1,5 +1,5 @@
-import { FilesystemItem } from '../../../types';
-import { DiscoveredAppDefinition } from '../../../contexts/AppContext';
+import { FilesystemItem } from '@kernel/types';
+import { DiscoveredAppDefinition } from '@kernel/contexts/AppContext';
 
 type OpenAppFunction = (appIdentifier: string | DiscoveredAppDefinition, initialData?: any) => void;
 

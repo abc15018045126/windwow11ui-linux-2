@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useMemo, useCallback, useContext } from 'react';
-import { AppDefinition, AppComponentProps, FilesystemItem } from '../../window/types';
-import * as FsService from '../../services/filesystemService';
-import ContextMenu, { ContextMenuItem } from '../../window/components/ContextMenu';
-import Icon from '../../window/components/icon';
-import { AppContext } from '../../window/contexts/AppContext';
-import { buildContextMenu } from '../../window/components/file/right-click';
-import { openFile } from '../../window/services/fileLauncher';
+import { AppComponentProps, FilesystemItem } from '@kernel/types';
+import * as FsService from '@/services/filesystemService';
+import ContextMenu, { ContextMenuItem } from '@kernel/components/ContextMenu';
+import Icon from '@kernel/components/icon';
+import { AppContext } from '@kernel/contexts/AppContext';
+import { buildContextMenu } from '@kernel/components/file/right-click';
+import { openFile } from '@kernel/services/fileLauncher';
 
 const getFileIconName = (filename: string): string => {
     if (filename.endsWith('.app')) return 'fileGeneric';
+    if (filename.endsWith('.lnk.json')) return 'fileGeneric'; // Could be a specific shortcut icon later
     if (filename.endsWith('.tsx') || filename.endsWith('.ts') || filename.endsWith('.html')) return 'fileCode';
     if (filename.endsWith('.json')) return 'fileJson';
     if (filename.endsWith('.txt') || filename.endsWith('.md')) return 'notebook';
@@ -92,7 +93,6 @@ const FileExplorerApp: React.FC<AppComponentProps> = ({
     
     const openItem = useCallback((item: FilesystemItem) => {
         if (renamingItemPath === item.path) return;
-        // Use the centralized file launcher service, passing the navigateTo function for folder handling
         openFile(item, openApp!, navigateTo);
     }, [navigateTo, openApp, renamingItemPath]);
     
@@ -124,6 +124,7 @@ const FileExplorerApp: React.FC<AppComponentProps> = ({
         let menuItems = buildContextMenu({
             clickedItem: contextMenu.item,
             currentPath: currentPath,
+            apps,
             refresh: fetchItems,
             openApp: openAppHandler,
             onRename: (item) => { setRenamingItemPath(item.path); setRenameValue(item.name); },
@@ -134,13 +135,12 @@ const FileExplorerApp: React.FC<AppComponentProps> = ({
             isPasteDisabled: !clipboard,
         });
 
-        // Add file explorer specific items
         if (!contextMenu.item) {
             menuItems.push({ type: 'separator' });
             menuItems.push({ type: 'item', label: 'Refresh', onClick: fetchItems });
         }
         return menuItems;
-    }, [contextMenu, openItem, handleCopy, handleCut, handlePaste, clipboard, currentPath, fetchItems, openApp]);
+    }, [contextMenu, openItem, handleCopy, handleCut, handlePaste, clipboard, currentPath, fetchItems, openApp, apps]);
 
 
     const breadcrumbs = ['Project Root', ...currentPath.split('/').filter(p => p)];
@@ -247,7 +247,6 @@ export const appDefinition: AppDefinition = {
     icon: 'fileExplorer',
     component: FileExplorerApp,
     defaultSize: { width: 800, height: 600 },
-    isPinnedToTaskbar: true,
 };
 
 export default FileExplorerApp;

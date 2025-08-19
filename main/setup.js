@@ -16,19 +16,18 @@ function setupInitialFilesystem() {
         fs.mkdirSync(SFTP_TEMP_DIR);
     }
     const desktopPath = path.join(FS_ROOT, 'Desktop');
-    const appsPath = path.join(FS_ROOT, 'components', 'apps');
-
-    // Auto-create desktop shortcuts from .app files in components/apps
-    if (fs.existsSync(appsPath)) {
-        const appFiles = fs.readdirSync(appsPath).filter(file => file.endsWith('.app'));
-        appFiles.forEach(appFile => {
-            const destPath = path.join(desktopPath, appFile);
-            if (!fs.existsSync(destPath)) {
-                const sourcePath = path.join(appsPath, appFile);
-                fs.copyFileSync(sourcePath, destPath);
-            }
-        });
-    }
+    const defaultApps = [
+        { appId: 'appStore', name: 'App Store' },
+        { appId: 'fileExplorer', name: 'File Explorer' },
+        { appId: 'settings', name: 'Settings' },
+    ];
+    defaultApps.forEach(appDef => {
+        const appShortcutPath = path.join(desktopPath, `${appDef.name}.app`);
+        if (!fs.existsSync(appShortcutPath)) {
+            const shortcutContent = JSON.stringify({ appId: appDef.appId });
+            fs.writeFileSync(appShortcutPath, shortcutContent);
+        }
+    });
 }
 
 module.exports = { setupInitialFilesystem };

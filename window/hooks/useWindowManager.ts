@@ -1,9 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
-import { OpenApp } from '../types';
-import { AppDefinition } from '../types'; // This is the static definition
-import { DiscoveredAppDefinition } from '../contexts/AppContext';
-import { TASKBAR_HEIGHT, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT } from '../constants';
-import { APP_DEFINITIONS } from '../../components/apps';
+import { OpenApp, AppDefinition } from '@kernel/types';
+import { DiscoveredAppDefinition } from '@kernel/contexts/AppContext';
+import { TASKBAR_HEIGHT, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT } from '@kernel/constants';
+import { APP_DEFINITIONS } from '@apps/index';
 
 export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) => {
   const [openApps, setOpenApps] = useState<OpenApp[]>([]);
@@ -49,7 +48,7 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
     }
 
     if (!appInfo) {
-        console.error(`App with identifier "${appIdentifier}" not found.`);
+        console.error(`App with identifier "${typeof appIdentifier === 'string' ? appIdentifier : appIdentifier.id}" not found.`);
         return;
     }
 
@@ -70,7 +69,7 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
     }
 
     if (!appInfo.appId) return;
-    const appDef = APP_DEFINITIONS.find(app => app.id === appInfo.appId);
+    const appDef = APP_DEFINITIONS.find(app => app.id === appInfo!.appId);
     if (!appDef) return;
 
     if (!initialData) {
@@ -86,7 +85,7 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
       }
     }
 
-    const instanceId = `${appInfo!.appId}-${Date.now()}`;
+    const instanceId = `${appInfo.appId}-${Date.now()}`;
     const newZIndex = nextZIndex + 1;
     setNextZIndex(newZIndex);
 
@@ -95,7 +94,7 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
 
     const newApp: OpenApp = {
       ...appDef,
-      icon: appInfo.icon, // Pass the icon name string
+      icon: appInfo.icon,
       instanceId,
       zIndex: newZIndex,
       position: getNextPosition(defaultWidth, defaultHeight),
@@ -112,7 +111,6 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
 
   const focusApp = useCallback((instanceId: string) => {
     if (activeAppInstanceId === instanceId) return;
-
     const newZIndex = nextZIndex + 1;
     setNextZIndex(newZIndex);
     setOpenApps(prev =>
@@ -137,12 +135,7 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
      if (!app) return;
 
      setOpenApps(prev =>
-      prev.map(a => {
-        if (a.instanceId === instanceId) {
-          return { ...a, isMinimized: !a.isMinimized };
-        }
-        return a;
-      })
+      prev.map(a => (a.instanceId === instanceId ? { ...a, isMinimized: !a.isMinimized } : a))
     );
 
     if (app.isMinimized) {
@@ -204,12 +197,10 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
     );
   }, []);
 
-  // The hook returns everything the App component needs
   return {
     openApps,
     activeAppInstanceId,
     discoveredApps,
-    desktopRef, // We need to pass the real ref from the component
     openApp,
     focusApp,
     closeApp,
