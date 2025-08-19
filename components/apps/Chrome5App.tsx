@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppDefinition, AppComponentProps } from '../../types';
-import { Browser5Icon } from '../../constants';
+import { Browser4Icon } from '../../constants';
 
 type Status = 'Connecting...' | 'Connected' | 'Disconnected' | 'Error';
 
@@ -147,7 +147,7 @@ const Chrome5App: React.FC<AppComponentProps> = ({ setTitle: setWindowTitle }) =
 export const appDefinition: AppDefinition = {
   id: 'chrome5',
   name: 'Chrome 5',
-  icon: Browser5Icon,
+  icon: Browser4Icon,
   component: Chrome5App,
   defaultSize: { width: 1024, height: 768 },
   isPinnedToTaskbar: true,
