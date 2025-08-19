@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { AppDefinition, AppComponentProps } from '../../../window/types';
-import { Browser2Icon } from '../../../window/constants';
+import { AppDefinition, AppComponentProps } from '../../window/types';
+import { Browser2Icon } from '../../window/constants';
 
 // This component is just a placeholder. The app is launched externally.
 const Chrome2App: React.FC<AppComponentProps> = ({ setTitle }) => {

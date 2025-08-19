@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AppDefinition, AppComponentProps } from '../../../window/types';
-import { readFile, saveFile } from '../../../services/filesystemService';
-import { NotebookIcon } from '../../../window/constants';
+import { AppDefinition, AppComponentProps } from '../../window/types';
+import { readFile, saveFile } from '../../services/filesystemService';
+import { NotebookIcon } from '../../window/constants';
 
 interface FileIdentifier {
     path: string;
