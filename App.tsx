@@ -75,7 +75,15 @@ const App: React.FC = () => {
         // @ts-ignore
         window.electronAPI.launchExternalApp(appInfo.path);
       } else {
-        alert('Launching external apps is only supported in the desktop version.');
+        // Fallback to the web API for remote/browser clients
+        fetch('http://localhost:3001/api/launch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: appInfo.path }),
+        }).catch(error => {
+          console.error('Failed to launch external app via API:', error);
+          alert('Failed to launch application. Ensure the backend server is running.');
+        });
       }
       setIsStartMenuOpen(false);
       return;
