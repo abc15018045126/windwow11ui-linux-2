@@ -11,9 +11,19 @@ function launchExternalAppByPath(relativeAppPath, args = []) {
         const child = spawn(process.execPath, spawnArgs, {
             cwd: appDir,
             detached: true,
-            stdio: 'inherit',
+            stdio: 'pipe',
         });
+
+        child.stdout.on('data', (data) => {
+            console.log(`[${relativeAppPath}] stdout: ${data}`);
+        });
+
+        child.stderr.on('data', (data) => {
+            console.error(`[${relativeAppPath}] stderr: ${data}`);
+        });
+
         child.on('error', (err) => console.error(`Failed to start subprocess for ${appDir}:`, err));
+
         child.unref();
         return true;
     } catch (error) {
