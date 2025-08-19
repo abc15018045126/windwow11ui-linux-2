@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { OpenApp, ClipboardItem, FilesystemItem } from '../types';
-import { CloseIcon, MinimizeIcon, MaximizeIcon, RestoreIcon, TASKBAR_HEIGHT } from '../constants';
-import { useTheme } from './theme';
+import { OpenApp, ClipboardItem, FilesystemItem } from '../../types';
+import { DiscoveredAppDefinition } from '../../components/AppContext';
+import { CloseIcon, MinimizeIcon, MaximizeIcon, RestoreIcon, TASKBAR_HEIGHT } from '../../constants';
+import { useTheme } from '../../components/theme';
 
 interface AppWindowProps {
   app: OpenApp;
@@ -15,7 +16,7 @@ interface AppWindowProps {
   desktopRef: React.RefObject<HTMLDivElement>;
   onSetTitle: (newTitle: string) => void;
   onWallpaperChange: (newUrl: string) => void;
-  openApp?: (appId: string, initialData?: any) => void;
+  openApp?: (appInfo: DiscoveredAppDefinition, initialData?: any) => void;
   clipboard?: ClipboardItem | null;
   handleCopy?: (item: FilesystemItem) => void;
   handleCut?: (item: FilesystemItem) => void;

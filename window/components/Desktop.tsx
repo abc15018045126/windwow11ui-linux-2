@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect, useCallback, useRef, useMemo, useContext } from 'react';
-import { FilesystemItem, AppComponentProps, ClipboardItem } from '../types';
-import * as FsService from '../services/filesystemService';
-import ContextMenu, { ContextMenuItem } from './ContextMenu';
-import { TASKBAR_HEIGHT } from '../constants';
-import { FolderIcon, FileCodeIcon, FileJsonIcon, FileGenericIcon, NotebookIcon } from '../constants';
-import { APP_DEFINITIONS } from './apps';
-import { AppContext } from './AppContext';
+import { FilesystemItem, AppComponentProps, ClipboardItem } from '../../types';
+import * as FsService from '../../services/filesystemService';
+import ContextMenu, { ContextMenuItem } from '../../components/ContextMenu';
+import { TASKBAR_HEIGHT } from '../../constants';
+import { FolderIcon, FileCodeIcon, FileJsonIcon, FileGenericIcon, NotebookIcon } from '../../constants';
+import { APP_DEFINITIONS } from '../../components/apps';
+import { AppContext } from '../../components/AppContext';
 
 
 const GRID_SIZE = 90;
