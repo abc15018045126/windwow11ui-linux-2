@@ -17,6 +17,7 @@ import { appDefinition as terminusSshAppDefinition } from './TerminusSshApp';
 import { appDefinition as sftpAppDefinition } from './SFTPApp';
 import { appDefinition as appStoreAppDefinition } from './AppStoreApp';
 import { appDefinition as themeAppDefinition } from './ThemeApp';
+import { appDefinition as propertiesAppDefinition } from './PropertiesApp';
 
 /**
  * The master list of all applications available in the OS.
@@ -41,4 +42,5 @@ export const APP_DEFINITIONS: AppDefinition[] = [
   settingsAppDefinition,
   notebookAppDefinition,
   aboutAppDefinition,
+  propertiesAppDefinition,
 ];
