@@ -1,4 +1,4 @@
-import { FilesystemItem } from '../../types';
+import { FilesystemItem } from '../../../types';
 
 export const handleCreateShortcut = (item: FilesystemItem, refresh: () => void) => {
   // This is a placeholder. A full implementation would require creating a new .app file

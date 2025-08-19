@@ -1,6 +1,6 @@
-import { FilesystemItem } from '../../types';
+import { FilesystemItem } from '../../../types';
 import { ContextMenuItem } from '../ContextMenu';
-import { DiscoveredAppDefinition } from '../../contexts/AppContext';
+import { DiscoveredAppDefinition } from '../../../contexts/AppContext';
 import { handleNewFolder, handleNewFile } from './create';
 import { handleDeleteItem } from './delete';
 import { handleShowProperties } from './properties';
