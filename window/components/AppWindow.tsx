@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { OpenApp, ClipboardItem, FilesystemItem } from '../../types';
-import { DiscoveredAppDefinition } from '../../contexts/AppContext';
-import { CloseIcon, MinimizeIcon, MaximizeIcon, RestoreIcon, TASKBAR_HEIGHT } from '../../constants';
-import { useTheme } from '../../theme';
+import { OpenApp, ClipboardItem, FilesystemItem } from '../types';
+import { DiscoveredAppDefinition } from '../contexts/AppContext';
+import { CloseIcon, MinimizeIcon, MaximizeIcon, RestoreIcon, TASKBAR_HEIGHT } from '../constants';
+import { useTheme } from '../theme';
 
 interface AppWindowProps {
   app: OpenApp;
