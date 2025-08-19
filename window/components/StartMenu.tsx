@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useContext } from 'react';
-import { DiscoveredAppDefinition, AppContext } from '../../components/AppContext';
+import { DiscoveredAppDefinition, AppContext } from '../contexts/AppContext';
 import { APP_DEFINITIONS } from '../../components/apps';
-import { SearchIcon, SettingsIcon, StartIcon as PowerIcon, FileGenericIcon } from '../../constants';
-import { useTheme } from '../../components/theme';
+import { SearchIcon, SettingsIcon, StartIcon as PowerIcon, FileGenericIcon } from '../constants';
+import { useTheme } from '../theme';
 
 interface StartMenuProps {
   onOpenApp: (app: DiscoveredAppDefinition) => void;

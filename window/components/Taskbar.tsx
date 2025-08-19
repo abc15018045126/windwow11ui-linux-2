@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext, useMemo } from 'react';
-import { OpenApp } from '../../types';
-import { DiscoveredAppDefinition, AppContext } from '../../components/AppContext';
+import { OpenApp } from '../types';
+import { DiscoveredAppDefinition, AppContext } from '../contexts/AppContext';
 import { APP_DEFINITIONS } from '../../components/apps';
-import { StartIcon, TASKBAR_HEIGHT, FileGenericIcon } from '../../constants';
-import { useTheme } from '../../components/theme';
+import { StartIcon, TASKBAR_HEIGHT, FileGenericIcon } from '../constants';
+import { useTheme } from '../theme';
 
 interface TaskbarProps {
   openApps: OpenApp[];
@@ -32,19 +32,23 @@ const Taskbar: React.FC<TaskbarProps> = ({ openApps, activeAppInstanceId, onTogg
 
   const taskbarItems = useMemo(() => {
     const items = new Map<string, { appDef: DiscoveredAppDefinition, instance?: OpenApp }>();
+    const openAppMap = new Map(openApps.map(app => [app.id, app]));
 
     // Add pinned apps first
     const pinnedApps = discoveredApps.filter(app => app.isPinned);
     pinnedApps.forEach(appDef => {
-      items.set(appDef.appId || appDef.path!, { appDef });
+      const key = appDef.appId || appDef.path!;
+      items.set(key, { appDef, instance: openAppMap.get(key) });
     });
 
-    // Add or update with open apps
+    // Add any open apps that are not pinned
     openApps.forEach(openApp => {
-      const key = openApp.id; // This is the appId from the original static definition
-      const appDef = discoveredApps.find(app => app.appId === key);
-      if (appDef) {
-        items.set(key, { appDef, instance: openApp });
+      const key = openApp.id;
+      if (!items.has(key)) {
+        const appDef = discoveredApps.find(app => app.appId === key);
+        if (appDef) {
+          items.set(key, { appDef, instance: openApp });
+        }
       }
     });
 
