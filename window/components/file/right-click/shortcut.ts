@@ -1,7 +1,11 @@
 import { FilesystemItem } from '../../../types';
+import * as FsService from '../../../../services/filesystemService';
 
-export const handleCreateShortcut = (item: FilesystemItem, refresh: () => void) => {
-  // This is a placeholder. A full implementation would require creating a new .app file
-  // on the desktop that points to the original item's path.
-  alert('Create Shortcut feature is not yet implemented.');
+export const handleCreateShortcut = async (item: FilesystemItem, currentPath: string, refresh: () => void) => {
+  const shortcutName = await FsService.findUniqueName(currentPath, `${item.name} - Shortcut`, false, '.lnk.json');
+  const shortcutContent = JSON.stringify({
+    shortcutTo: item.path,
+  });
+  await FsService.createFile(currentPath, shortcutName, shortcutContent);
+  refresh();
 };

@@ -5,6 +5,7 @@ import ContextMenu, { ContextMenuItem } from '../../window/components/ContextMen
 import Icon from '../../window/components/icon';
 import { AppContext } from '../../window/contexts/AppContext';
 import { buildContextMenu } from '../../window/components/file/right-click';
+import { openFile } from '../../window/services/fileLauncher';
 
 const getFileIconName = (filename: string): string => {
     if (filename.endsWith('.app')) return 'fileGeneric';
@@ -91,15 +92,8 @@ const FileExplorerApp: React.FC<AppComponentProps> = ({
     
     const openItem = useCallback((item: FilesystemItem) => {
         if (renamingItemPath === item.path) return;
-        if (item.type === 'folder') {
-            navigateTo(item.path);
-        } else if (item.name.endsWith('.app') && item.content) {
-            try {
-                openApp?.(JSON.parse(item.content));
-            } catch (e) { console.error("Could not parse app shortcut", e); }
-        } else if (item.type === 'file') {
-            openApp?.('notebook', { file: { path: item.path, name: item.name } });
-        }
+        // Use the centralized file launcher service, passing the navigateTo function for folder handling
+        openFile(item, openApp!, navigateTo);
     }, [navigateTo, openApp, renamingItemPath]);
     
     const handleItemContextMenu = (e: React.MouseEvent, item: FilesystemItem) => {
