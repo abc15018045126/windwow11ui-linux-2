@@ -5,7 +5,7 @@ import ContextMenu, { ContextMenuItem } from './ContextMenu';
 import { TASKBAR_HEIGHT } from '../constants';
 import { AppContext } from '../contexts/AppContext';
 import Icon from './icon';
-
+import { buildContextMenu } from './file/right-click';
 
 const GRID_SIZE = 90;
 
@@ -18,26 +18,20 @@ interface DesktopIconState {
 interface DesktopProps extends Pick<AppComponentProps, 'openApp' | 'clipboard' | 'handleCopy' | 'handleCut' | 'handlePaste'> {}
 
 
-// Helper component to determine the correct icon
 const DesktopItemIcon: React.FC<{ item: FilesystemItem }> = ({ item }) => {
     let iconName = 'fileGeneric';
-
     if (item.type === 'folder') {
         iconName = 'folder';
     } else if (item.name.endsWith('.app') && item.content) {
         try {
             const appInfo = JSON.parse(item.content);
-            if (appInfo.icon) {
-                iconName = appInfo.icon;
-            }
-        } catch (e) { /* use default */ }
+            if (appInfo.icon) iconName = appInfo.icon;
+        } catch (e) {}
     } else {
-        // Determine icon by file extension
         if (item.name.endsWith('.tsx') || item.name.endsWith('.ts') || item.name.endsWith('.html')) iconName = 'fileCode';
         else if (item.name.endsWith('.json')) iconName = 'fileJson';
         else if (item.name.endsWith('.txt') || item.name.endsWith('.md')) iconName = 'notebook';
     }
-
     return <Icon iconName={iconName} className="w-10 h-10 mb-1 pointer-events-none" />;
 };
 
@@ -48,7 +42,7 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
   const [draggingIcon, setDraggingIcon] = useState<{ id: string; offset: { x: number; y: number } } | null>(null);
   const desktopRef = useRef<HTMLDivElement>(null);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; item?: DesktopIconState } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; item?: FilesystemItem } | null>(null);
   const [renamingIconId, setRenamingIconId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
@@ -59,24 +53,17 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
       if (desktopRef.current) {
           const desktopHeight = desktopRef.current.clientHeight;
           const iconsPerColumn = Math.floor((desktopHeight - 20) / GRID_SIZE);
-
           setIcons(
               desktopItems.map((item, index) => ({
                   id: item.path,
                   item,
-                  position: {
-                      x: 10 + Math.floor(index / iconsPerColumn) * GRID_SIZE,
-                      y: 10 + (index % iconsPerColumn) * GRID_SIZE,
-                  },
+                  position: { x: 10 + Math.floor(index / iconsPerColumn) * GRID_SIZE, y: 10 + (index % iconsPerColumn) * GRID_SIZE },
               }))
           );
       }
   }, []);
 
-  useEffect(() => {
-    fetchDesktopItems();
-  }, [fetchDesktopItems]);
-
+  useEffect(() => { fetchDesktopItems(); }, [fetchDesktopItems]);
 
   const handleIconMouseDown = (e: React.MouseEvent, icon: DesktopIconState) => {
     e.preventDefault();
@@ -84,25 +71,17 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
     if (e.button !== 0 || renamingIconId === icon.id) return;
     setSelectedIconId(icon.id);
     setContextMenu(null);
-    setDraggingIcon({
-      id: icon.id,
-      offset: { x: e.clientX - icon.position.x, y: e.clientY - icon.position.y },
-    });
+    setDraggingIcon({ id: icon.id, offset: { x: e.clientX - icon.position.x, y: e.clientY - icon.position.y } });
   };
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!draggingIcon || !desktopRef.current) return;
     let newX = e.clientX - draggingIcon.offset.x;
     let newY = e.clientY - draggingIcon.offset.y;
-    const desktopWidth = desktopRef.current.clientWidth;
-    const desktopHeight = desktopRef.current.clientHeight;
-    newX = Math.max(10, Math.min(newX, desktopWidth - GRID_SIZE + 10));
-    newY = Math.max(10, Math.min(newY, desktopHeight - GRID_SIZE + 10));
-    setIcons(prev =>
-      prev.map(icon =>
-        icon.id === draggingIcon.id ? { ...icon, position: { x: newX, y: newY } } : icon
-      )
-    );
+    const { clientWidth, clientHeight } = desktopRef.current;
+    newX = Math.max(10, Math.min(newX, clientWidth - GRID_SIZE + 10));
+    newY = Math.max(10, Math.min(newY, clientHeight - GRID_SIZE + 10));
+    setIcons(prev => prev.map(icon => icon.id === draggingIcon.id ? { ...icon, position: { x: newX, y: newY } } : icon));
   }, [draggingIcon]);
 
   const handleMouseUp = useCallback(() => {
@@ -133,10 +112,10 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
   }, [draggingIcon, handleMouseMove, handleMouseUp]);
   
   const handleDoubleClick = (item: FilesystemItem) => {
+    if (renamingIconId === item.path) return;
     if (item.name.endsWith('.app') && item.content) {
         try {
-            const appInfo = JSON.parse(item.content);
-            openApp?.(appInfo);
+            openApp?.(JSON.parse(item.content));
         } catch(e) { console.error("Could not parse app shortcut", e); }
     } else if (item.type === 'file') {
         openApp?.('notebook', { file: { path: item.path, name: item.name } });
@@ -149,14 +128,14 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
     e.preventDefault();
     if (e.target !== desktopRef.current) return;
     setSelectedIconId(null);
-    setContextMenu({ x: e.clientX, y: e.clientY });
+    setContextMenu({ x: e.clientX, y: e.clientY, item: undefined });
   };
   
   const handleIconContextMenu = (e: React.MouseEvent, icon: DesktopIconState) => {
     e.preventDefault();
     e.stopPropagation();
     setSelectedIconId(icon.id);
-    setContextMenu({ x: e.clientX, y: e.clientY, item: icon });
+    setContextMenu({ x: e.clientX, y: e.clientY, item: icon.item });
   };
   
   const handleRename = async () => {
@@ -170,65 +149,43 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
 
   const contextMenuItems = useMemo<ContextMenuItem[]>(() => {
     if (!contextMenu) return [];
-    const selectedIconState = contextMenu.item;
-    const selectedItem = selectedIconState?.item;
 
-    const createNewFolder = async () => {
-      const name = await FsService.findUniqueName(DESKTOP_PATH, "New folder", true);
-      await FsService.createFolder(DESKTOP_PATH, name);
-      fetchDesktopItems();
+    // The 'openApp' prop can be undefined, but our builder needs it.
+    // We provide a no-op function if it's not available.
+    const openAppHandler = openApp || (() => {});
+
+    // This is a special case not handled by the builder, which is for file-specific actions.
+    // We can add it to the builder later if needed.
+    if (!contextMenu.item) {
+        const backgroundItems = buildContextMenu({
+            currentPath: DESKTOP_PATH,
+            refresh: fetchDesktopItems,
+            openApp: openAppHandler,
+            onRename: () => {}, // no-op
+            onCopy: () => {}, // no-op
+            onCut: () => {}, // no-op
+            onPaste: handlePaste!,
+            onOpen: () => {}, // no-op
+            isPasteDisabled: !clipboard,
+        });
+        backgroundItems.push({type: 'separator'});
+        backgroundItems.push({ type: 'item', label: 'Display Settings', onClick: () => openAppHandler('settings') });
+        backgroundItems.push({ type: 'item', label: 'About This Clone', onClick: () => openAppHandler('about') });
+        return backgroundItems;
     }
 
-    const createNewFile = async () => {
-      const name = await FsService.findUniqueName(DESKTOP_PATH, "New Text Document", false, ".txt");
-      await FsService.createFile(DESKTOP_PATH, name, "");
-      fetchDesktopItems();
-    }
-    
-    if (selectedItem && handleCopy && handleCut) {
-      const menuItems: ContextMenuItem[] = [];
-
-      if (selectedItem.type === 'file') {
-        menuItems.push({ type: 'item', label: 'Open', onClick: () => handleDoubleClick(selectedItem) });
-
-        const fileHandlers = apps.filter(app => app.handlesFiles);
-        if (fileHandlers.length > 0) {
-          menuItems.push({ type: 'separator' });
-          fileHandlers.forEach(app => {
-            menuItems.push({
-              type: 'item',
-              label: `Open with ${app.name}`,
-              onClick: () => openApp?.(app, { file: selectedItem }),
-            });
-          });
-        }
-      } else {
-        menuItems.push({ type: 'item', label: 'Open', onClick: () => handleDoubleClick(selectedItem) });
-      }
-
-      menuItems.push({ type: 'separator' });
-      menuItems.push({ type: 'item', label: 'Cut', onClick: () => handleCut(selectedItem) });
-      menuItems.push({ type: 'item', label: 'Copy', onClick: () => handleCopy(selectedItem) });
-      menuItems.push({ type: 'separator' });
-      menuItems.push({ type: 'item', label: 'Delete', onClick: async () => { await FsService.deleteItem(selectedItem); fetchDesktopItems(); } });
-      menuItems.push({ type: 'item', label: 'Rename', onClick: () => {
-          setRenamingIconId(selectedIconState.id);
-          setRenameValue(selectedItem.name);
-      } });
-
-      return menuItems;
-    } else if (handlePaste) {
-      return [
-        { type: 'item', label: 'New Folder', onClick: createNewFolder },
-        { type: 'item', label: 'New Text File', onClick: createNewFile },
-        { type: 'separator' },
-        { type: 'item', label: 'Paste', onClick: () => handlePaste(DESKTOP_PATH), disabled: !clipboard},
-        { type: 'separator' },
-        { type: 'item', label: 'Display Settings', onClick: () => openApp?.('settings') },
-        { type: 'item', label: 'About This Clone', onClick: () => openApp?.('about') },
-      ];
-    }
-    return [];
+    return buildContextMenu({
+        clickedItem: contextMenu.item,
+        currentPath: DESKTOP_PATH,
+        refresh: fetchDesktopItems,
+        openApp: openAppHandler,
+        onRename: (item) => { setRenamingIconId(item.path); setRenameValue(item.name); },
+        onCopy: handleCopy!,
+        onCut: handleCut!,
+        onPaste: handlePaste!,
+        onOpen: handleDoubleClick,
+        isPasteDisabled: !clipboard,
+    });
   }, [contextMenu, openApp, clipboard, handleCopy, handleCut, handlePaste, fetchDesktopItems, apps]);
 
   const handleDesktopClick = (e: React.MouseEvent) => {
@@ -238,7 +195,6 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
       setContextMenu(null);
     }
   };
-
 
   return (
     <div
@@ -262,7 +218,7 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
             transition: draggingIcon?.id === icon.id ? 'none' : 'all 0.2s ease-out'
           }}
           onMouseDown={e => handleIconMouseDown(e, icon)}
-          onDoubleClick={() => renamingIconId !== icon.id && handleDoubleClick(icon.item)}
+          onDoubleClick={() => handleDoubleClick(icon.item)}
           onContextMenu={e => handleIconContextMenu(e, icon)}
           title={icon.item.name}
         >
