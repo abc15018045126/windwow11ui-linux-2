@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { AppDefinition, AppComponentProps, FilesystemItem } from '../../types';
-import * as FsService from '../../services/filesystemService';
-import { FolderIcon, FileCodeIcon, FileJsonIcon, FileGenericIcon, StarIcon, NotebookIcon, FileExplorerIcon } from '../../constants';
-import ContextMenu, { ContextMenuItem } from '../ContextMenu';
+import { AppDefinition, AppComponentProps, FilesystemItem } from '../../../window/types';
+import * as FsService from '../../../services/filesystemService';
+import { FolderIcon, FileCodeIcon, FileJsonIcon, FileGenericIcon, StarIcon, NotebookIcon, FileExplorerIcon } from '../../../window/constants';
+import ContextMenu, { ContextMenuItem } from '../../window/components/ContextMenu';
 
 const getFileIcon = (filename: string) => {
     if (filename.endsWith('.app')) return <FileGenericIcon className="w-12 h-12 text-blue-400" />;
@@ -93,7 +93,7 @@ const FileExplorerApp: React.FC<AppComponentProps> = ({
         } else if (item.name.endsWith('.app') && item.content) {
             try {
                 const appInfo = JSON.parse(item.content);
-                openApp?.(appInfo.appId);
+                openApp?.(appInfo);
             } catch (e) { console.error("Could not parse app shortcut", e); }
         } else if (item.type === 'file') {
             openApp?.('notebook', { file: { path: item.path, name: item.name } });

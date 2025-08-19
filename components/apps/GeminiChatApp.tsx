@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ChatMessage, AppComponentProps, AppDefinition } from '../../types';
-import { generateGeminiResponse } from '../../services/geminiService';
-import { SearchIcon } from '../../constants';
+import { ChatMessage, AppComponentProps, AppDefinition } from '../../../window/types';
+import { generateGeminiResponse } from '../../../services/geminiService';
+import { SearchIcon, GeminiIcon } from '../../../window/constants';
 
 const GeminiChatApp: React.FC<AppComponentProps> = ({ appInstanceId, setTitle }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -95,7 +95,7 @@ const GeminiChatApp: React.FC<AppComponentProps> = ({ appInstanceId, setTitle })
 export const appDefinition: AppDefinition = {
   id: 'geminiChat',
   name: 'Gemini Chat',
-  icon: SearchIcon,
+  icon: GeminiIcon,
   component: GeminiChatApp,
   defaultSize: { width: 500, height: 700 },
   isPinnedToTaskbar: true,

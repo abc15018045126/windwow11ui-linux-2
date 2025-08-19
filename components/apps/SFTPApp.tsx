@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { AppComponentProps, AppDefinition, FilesystemItem as BaseFilesystemItem } from '../../types';
-import { FolderIcon, FileGenericIcon, SftpIcon } from '../../constants';
-import ContextMenu, { ContextMenuItem } from '../ContextMenu';
+import { AppComponentProps, AppDefinition, FilesystemItem as BaseFilesystemItem } from '../../../window/types';
+import { FolderIcon, FileGenericIcon, SftpIcon } from '../../../window/constants';
+import ContextMenu, { ContextMenuItem } from '../../window/components/ContextMenu';
 
 const pathHelper = {
     join: (...args: string[]) => args.join('/').replace(/\/+/g, '/'),

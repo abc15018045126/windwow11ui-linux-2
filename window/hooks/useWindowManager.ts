@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { OpenApp, ClipboardItem, FilesystemItem } from '../../types';
-import { AppDefinition } from '../../types'; // This is the static definition
-import { DiscoveredAppDefinition } from '../../components/AppContext';
-import { TASKBAR_HEIGHT, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT } from '../../constants';
+import { useState, useCallback, useEffect } from 'react';
+import { OpenApp } from '../types';
+import { AppDefinition } from '../types'; // This is the static definition
+import { DiscoveredAppDefinition } from '../contexts/AppContext';
+import { TASKBAR_HEIGHT, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT } from '../constants';
 import { APP_DEFINITIONS } from '../../components/apps';
 
 export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) => {
@@ -39,7 +39,20 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
     };
   };
 
-  const openApp = useCallback(async (appInfo: DiscoveredAppDefinition, initialData?: any) => {
+  const openApp = useCallback(async (appIdentifier: string | DiscoveredAppDefinition, initialData?: any) => {
+    let appInfo: DiscoveredAppDefinition | undefined;
+
+    if (typeof appIdentifier === 'string') {
+      appInfo = discoveredApps.find(app => app.appId === appIdentifier);
+    } else {
+      appInfo = appIdentifier;
+    }
+
+    if (!appInfo) {
+        console.error(`App with identifier "${appIdentifier}" not found.`);
+        return;
+    }
+
     if (appInfo.external && appInfo.path) {
       if (window.electronAPI?.launchExternalApp) {
         window.electronAPI.launchExternalApp(appInfo.path);
@@ -61,19 +74,19 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
     if (!appDef) return;
 
     if (!initialData) {
-      const existingAppInstance = openApps.find(app => app.id === appInfo.appId && !app.isMinimized);
+      const existingAppInstance = openApps.find(app => app.id === appInfo!.appId && !app.isMinimized);
       if (existingAppInstance) {
         focusApp(existingAppInstance.instanceId);
         return;
       }
-      const minimizedInstance = openApps.find(app => app.id === appInfo.appId && app.isMinimized);
+      const minimizedInstance = openApps.find(app => app.id === appInfo!.appId && app.isMinimized);
       if (minimizedInstance) {
         toggleMinimizeApp(minimizedInstance.instanceId);
         return;
       }
     }
 
-    const instanceId = `${appInfo.appId}-${Date.now()}`;
+    const instanceId = `${appInfo!.appId}-${Date.now()}`;
     const newZIndex = nextZIndex + 1;
     setNextZIndex(newZIndex);
 
@@ -94,7 +107,7 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
 
     setOpenApps(prev => [...prev, newApp]);
     setActiveAppInstanceId(instanceId);
-  }, [nextZIndex, openApps]);
+  }, [nextZIndex, openApps, discoveredApps]);
 
   const focusApp = useCallback((instanceId: string) => {
     if (activeAppInstanceId === instanceId) return;
