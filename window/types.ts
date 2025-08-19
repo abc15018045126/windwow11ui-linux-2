@@ -45,7 +45,7 @@ export type AppComponentProps = {
   wallpaper?: string;
   onWallpaperChange?: (newWallpaper: string) => void;
   // Allow apps to open other apps
-  openApp?: (appInfo: any, initialData?: any) => void; // Using any for now to avoid circular deps
+  openApp?: (appId: string, initialData?: any) => void;
   initialData?: any; // To pass data on open
 
   // Filesystem related props for apps like File Explorer and Desktop
@@ -68,8 +68,7 @@ export interface AppDefinition {
   externalPath?: string; // Path relative to app root for the external app
 }
 
-export interface OpenApp extends Omit<AppDefinition, 'icon'> {
-  icon?: string; // The icon name string, now optional
+export interface OpenApp extends AppDefinition {
   instanceId: string;
   zIndex: number;
   position: { x: number; y: number };

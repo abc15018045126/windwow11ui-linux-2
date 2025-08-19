@@ -1,9 +1,8 @@
 import React from 'react';
-import * as Icons from '../../constants';
-import { AppIconProps } from '../../types';
+import * as Icons from '@kernel/constants';
+import { AppIconProps } from '@kernel/types';
 
-// Create a map of all available icons, using a consistent keying scheme (e.g., lowercase)
-const iconMap: { [key: string]: React.FC<AppIconProps> } = {
+const iconMap: Record<string, React.FC<AppIconProps>> = {
     start: Icons.StartIcon,
     search: Icons.SearchIcon,
     settings: Icons.SettingsIcon,
@@ -36,8 +35,8 @@ const iconMap: { [key: string]: React.FC<AppIconProps> } = {
     user: Icons.UserIcon,
     copy: Icons.CopyIcon,
     check: Icons.CheckIcon,
-    terminus: Icons.HyperIcon, // Re-using HyperIcon for Terminus
-    terminusSsh: Icons.HyperIcon, // Re-using HyperIcon for Terminus SSH
+    terminus: Icons.HyperIcon,
+    terminusSsh: Icons.HyperIcon,
 };
 
 interface IconProps extends AppIconProps {
@@ -48,14 +47,7 @@ export const Icon: React.FC<IconProps> = ({ iconName, ...rest }) => {
   if (!iconName) {
     return <Icons.FileGenericIcon {...rest} />;
   }
-
-  const IconComponent = iconMap[iconName];
-
-  if (!IconComponent) {
-    console.warn(`Icon "${iconName}" not found. Falling back to default.`);
-    return <Icons.FileGenericIcon {...rest} />;
-  }
-
+  const IconComponent = iconMap[iconName] || Icons.FileGenericIcon;
   return <IconComponent {...rest} />;
 };
 

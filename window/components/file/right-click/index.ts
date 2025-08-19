@@ -1,11 +1,11 @@
-import { FilesystemItem } from '../../types';
-import { ContextMenuItem } from '../ContextMenu';
-import { DiscoveredAppDefinition } from '../../contexts/AppContext';
+import { FilesystemItem } from '@kernel/types';
+import { ContextMenuItem } from '@kernel/components/ContextMenu';
+import { DiscoveredAppDefinition } from '@kernel/contexts/AppContext';
 import { handleNewFolder, handleNewFile } from './create';
 import { handleDeleteItem } from './delete';
 import { handleShowProperties } from './properties';
 import { handleCreateShortcut } from './shortcut';
-import { getOpenWithMenuItems } from '../app store/openWith';
+import { getOpenWithMenuItems } from '@kernel/components/app-store/openWith';
 
 type OpenAppFunction = (appIdentifier: string | DiscoveredAppDefinition, initialData?: any) => void;
 

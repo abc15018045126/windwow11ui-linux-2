@@ -1,4 +1,4 @@
-import * as FsService from '../../../../services/filesystemService';
+import * as FsService from '@/services/filesystemService';
 
 export const handleNewFolder = async (currentPath: string, refresh: () => void) => {
   const name = await FsService.findUniqueName(currentPath, "New folder", true);

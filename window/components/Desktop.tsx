@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, useContext } from 'react';
-import { FilesystemItem, AppComponentProps, ClipboardItem } from '../types';
-import * as FsService from '../../services/filesystemService';
-import ContextMenu, { ContextMenuItem } from './ContextMenu';
-import { TASKBAR_HEIGHT } from '../constants';
-import { AppContext } from '../contexts/AppContext';
-import Icon from './icon';
-import { buildContextMenu } from './file/right-click';
-import { openFile } from '../services/fileLauncher';
+import { FilesystemItem, AppComponentProps, ClipboardItem } from '@kernel/types';
+import * as FsService from '@/services/filesystemService';
+import ContextMenu, { ContextMenuItem } from '@kernel/components/ContextMenu';
+import { TASKBAR_HEIGHT } from '@kernel/constants';
+import { AppContext } from '@kernel/contexts/AppContext';
+import Icon from '@kernel/components/icon';
+import { buildContextMenu } from '@kernel/components/file/right-click';
+import { openFile } from '@kernel/services/fileLauncher';
 
 const GRID_SIZE = 90;
 
@@ -16,7 +16,7 @@ interface DesktopIconState {
   position: { x: number; y: number };
 }
 
-interface DesktopProps extends Pick<AppComponentProps, 'openApp' | 'clipboard' | 'handleCopy' | 'handleCut' | 'handlePaste'> {}
+interface DesktopProps extends Pick<AppComponentProps, 'openApp' | 'clipboard' | 'handleCopy' | 'handleCut' | 'handlePaste' | 'initialData'> {}
 
 
 const DesktopItemIcon: React.FC<{ item: FilesystemItem }> = ({ item }) => {
@@ -28,6 +28,11 @@ const DesktopItemIcon: React.FC<{ item: FilesystemItem }> = ({ item }) => {
             const appInfo = JSON.parse(item.content);
             if (appInfo.icon) iconName = appInfo.icon;
         } catch (e) {}
+    } else if (item.name.endsWith('.lnk.json') && item.content) {
+        try {
+            const shortcutInfo = JSON.parse(item.content);
+            if (shortcutInfo.icon) iconName = shortcutInfo.icon;
+        } catch (e) {}
     } else {
         if (item.name.endsWith('.tsx') || item.name.endsWith('.ts') || item.name.endsWith('.html')) iconName = 'fileCode';
         else if (item.name.endsWith('.json')) iconName = 'fileJson';
@@ -37,7 +42,7 @@ const DesktopItemIcon: React.FC<{ item: FilesystemItem }> = ({ item }) => {
 };
 
 
-const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handleCut, handlePaste }) => {
+const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handleCut, handlePaste, initialData }) => {
   const { apps } = useContext(AppContext);
   const [icons, setIcons] = useState<DesktopIconState[]>([]);
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
@@ -64,7 +69,7 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
       }
   }, []);
 
-  useEffect(() => { fetchDesktopItems(); }, [fetchDesktopItems]);
+  useEffect(() => { fetchDesktopItems(); }, [fetchDesktopItems, initialData?.refreshId]);
 
   const handleIconMouseDown = (e: React.MouseEvent, icon: DesktopIconState) => {
     e.preventDefault();
@@ -114,7 +119,6 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
   
   const handleDoubleClick = (item: FilesystemItem) => {
     if (renamingIconId === item.path) return;
-    // Use the centralized file launcher service
     openFile(item, openApp!);
   };
 
@@ -144,22 +148,19 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
   const contextMenuItems = useMemo<ContextMenuItem[]>(() => {
     if (!contextMenu) return [];
 
-    // The 'openApp' prop can be undefined, but our builder needs it.
-    // We provide a no-op function if it's not available.
     const openAppHandler = openApp || (() => {});
 
-    // This is a special case not handled by the builder, which is for file-specific actions.
-    // We can add it to the builder later if needed.
     if (!contextMenu.item) {
         const backgroundItems = buildContextMenu({
             currentPath: DESKTOP_PATH,
+            apps,
             refresh: fetchDesktopItems,
             openApp: openAppHandler,
-            onRename: () => {}, // no-op
-            onCopy: () => {}, // no-op
-            onCut: () => {}, // no-op
+            onRename: () => {},
+            onCopy: () => {},
+            onCut: () => {},
             onPaste: handlePaste!,
-            onOpen: () => {}, // no-op
+            onOpen: () => {},
             isPasteDisabled: !clipboard,
         });
         backgroundItems.push({type: 'separator'});
@@ -171,6 +172,7 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
     return buildContextMenu({
         clickedItem: contextMenu.item,
         currentPath: DESKTOP_PATH,
+        apps,
         refresh: fetchDesktopItems,
         openApp: openAppHandler,
         onRename: (item) => { setRenamingIconId(item.path); setRenameValue(item.name); },

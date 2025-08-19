@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { AppDefinition, AppComponentProps } from '../../window/types';
-import { StartIcon, SettingsIcon, SearchIcon, AboutIcon } from '../../window/constants';
+import { AppDefinition, AppComponentProps } from '../../types';
+import { StartIcon, SettingsIcon, SearchIcon, AboutIcon } from '../../constants';
 
 const AboutApp: React.FC<AppComponentProps> = ({ appInstanceId, setTitle }) => {
   

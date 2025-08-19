@@ -1,9 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const os = require('os');
-const fs = require('fs');
-const path = require('path');
-const { FS_ROOT } = require('./constants');
 const fsRouter = require('./filesystem');
 const { launchExternalAppByPath } = require('./launcher');
 const { API_PORT } = require('./constants');
@@ -24,35 +21,6 @@ function startApiServer() {
         } catch (error) {
             console.error('API Error getting OS user:', error);
             res.status(500).json({ error: 'Failed to get OS username' });
-        }
-    });
-
-    // App Discovery Endpoint
-    apiApp.get('/api/apps', async (req, res) => {
-        try {
-            const appsDir = path.join(FS_ROOT, 'components', 'apps');
-            const appFiles = await fs.promises.readdir(appsDir);
-
-            const appPromises = appFiles
-                .filter(file => file.endsWith('.app'))
-                .map(async (file) => {
-                    try {
-                        const filePath = path.join(appsDir, file);
-                        const content = await fs.promises.readFile(filePath, 'utf-8');
-                        const definition = JSON.parse(content);
-                        definition.id = file; // Use filename as a unique ID
-                        return definition;
-                    } catch (e) {
-                        console.error(`Could not parse app definition: ${file}`, e);
-                        return null; // Ignore malformed app files
-                    }
-                });
-
-            const apps = (await Promise.all(appPromises)).filter(Boolean); // Filter out nulls
-            res.json(apps);
-        } catch (error) {
-            console.error('API Error getting app list:', error);
-            res.status(500).json({ error: 'Failed to get app list' });
         }
     });
 

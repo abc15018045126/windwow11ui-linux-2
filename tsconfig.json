@@ -17,10 +17,17 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "allowJs": true,
+    "baseUrl": ".",
     "jsx": "react-jsx",
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@kernel/*": [
+        "window/*"
+      ],
+      "@apps/*": [
+        "components/apps/*"
       ]
     },
     "allowImportingTsExtensions": true,

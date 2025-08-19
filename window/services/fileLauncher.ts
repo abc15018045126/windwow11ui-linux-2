@@ -1,6 +1,6 @@
-import { FilesystemItem } from '../types';
-import { DiscoveredAppDefinition } from '../contexts/AppContext';
-import * as FsService from '../../services/filesystemService';
+import { FilesystemItem } from '@kernel/types';
+import { DiscoveredAppDefinition } from '@kernel/contexts/AppContext';
+import * as FsService from '@/services/filesystemService';
 
 type OpenAppFunction = (appIdentifier: string | DiscoveredAppDefinition, initialData?: any) => void;
 
@@ -17,15 +17,14 @@ export const openFile = async (
       if (content) {
         const shortcut = JSON.parse(content.content);
         if (shortcut.shortcutTo) {
-          // It's a shortcut, now we need to find the actual item it points to.
-          // This requires knowing the directory of the target path.
           const dirname = shortcut.shortcutTo.substring(0, shortcut.shortcutTo.lastIndexOf('/')) || '/';
           const filename = shortcut.shortcutTo.substring(shortcut.shortcutTo.lastIndexOf('/') + 1);
           const dirItems = await FsService.listDirectory(dirname);
           const targetItem = dirItems.find(i => i.name === filename);
           if (targetItem) {
-            // Recursively call openFile with the actual item
             return openFile(targetItem, openApp, navigateTo);
+          } else {
+            alert(`Shortcut target not found: ${shortcut.shortcutTo}`);
           }
         }
       }
@@ -38,11 +37,9 @@ export const openFile = async (
 
   // Handle folders
   if (item.type === 'folder') {
-    // If a navigate function is provided (i.e., we are in File Explorer), use it.
     if (navigateTo) {
       navigateTo(item.path);
     } else {
-      // Otherwise (i.e., on the Desktop), open in a new File Explorer window.
       openApp('fileExplorer', { initialPath: item.path });
     }
     return;
