@@ -6,6 +6,7 @@ import { TASKBAR_HEIGHT } from '../constants';
 import { AppContext } from '../contexts/AppContext';
 import Icon from './icon';
 import { buildContextMenu } from './file/right-click';
+import { openFile } from '../services/fileLauncher';
 
 const GRID_SIZE = 90;
 
@@ -113,15 +114,8 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
   
   const handleDoubleClick = (item: FilesystemItem) => {
     if (renamingIconId === item.path) return;
-    if (item.name.endsWith('.app') && item.content) {
-        try {
-            openApp?.(JSON.parse(item.content));
-        } catch(e) { console.error("Could not parse app shortcut", e); }
-    } else if (item.type === 'file') {
-        openApp?.('notebook', { file: { path: item.path, name: item.name } });
-    } else {
-        openApp?.('fileExplorer', { initialPath: item.path });
-    }
+    // Use the centralized file launcher service
+    openFile(item, openApp!);
   };
 
   const handleDesktopContextMenu = (e: React.MouseEvent) => {
