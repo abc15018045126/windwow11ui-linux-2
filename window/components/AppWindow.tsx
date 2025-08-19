@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { OpenApp, ClipboardItem, FilesystemItem } from '../types';
 import { DiscoveredAppDefinition } from '../contexts/AppContext';
-import { CloseIcon, MinimizeIcon, MaximizeIcon, RestoreIcon, TASKBAR_HEIGHT } from '../constants';
+import { TASKBAR_HEIGHT } from '../constants';
 import { useTheme } from '../theme';
+import Icon from './icon';
 
 interface AppWindowProps {
   app: OpenApp;
@@ -88,7 +89,6 @@ const AppWindow: React.FC<AppWindowProps> = ({
     const desktopHeight = (desktopRef.current?.clientHeight || window.innerHeight) - TASKBAR_HEIGHT;
     const windowWidth = windowRef.current?.offsetWidth || app.size.width;
     
-    // Allow dragging slightly off-screen for a better feel
     newX = Math.max(-windowWidth + 50, Math.min(newX, desktopWidth - 50));
     newY = Math.max(0, Math.min(newY, desktopHeight - 30));
 
@@ -107,9 +107,7 @@ const AppWindow: React.FC<AppWindowProps> = ({
     const MIN_WIDTH = 250;
     const MIN_HEIGHT = 150;
 
-    if (isResizing?.includes('right')) {
-        newWidth = Math.max(MIN_WIDTH, resizeStart.width + dx);
-    }
+    if (isResizing?.includes('right')) newWidth = Math.max(MIN_WIDTH, resizeStart.width + dx);
     if (isResizing?.includes('left')) {
         const calculatedWidth = resizeStart.width - dx;
         if (calculatedWidth >= MIN_WIDTH) {
@@ -117,9 +115,7 @@ const AppWindow: React.FC<AppWindowProps> = ({
             newX = resizeStart.winX + dx;
         }
     }
-    if (isResizing?.includes('bottom')) {
-        newHeight = Math.max(MIN_HEIGHT, resizeStart.height + dy);
-    }
+    if (isResizing?.includes('bottom')) newHeight = Math.max(MIN_HEIGHT, resizeStart.height + dy);
     if (isResizing?.includes('top')) {
         const calculatedHeight = resizeStart.height - dy;
         if (calculatedHeight >= MIN_HEIGHT) {
@@ -182,7 +178,6 @@ const AppWindow: React.FC<AppWindowProps> = ({
       }}
       onMouseDown={onFocus}
     >
-      {/* Resize Handles */}
       {!app.isMaximized && (
         <>
           <div className="absolute -left-1 top-0 bottom-0 w-2 cursor-ew-resize z-10" onMouseDown={e => handleMouseDownResize(e, 'left')} />
@@ -202,15 +197,15 @@ const AppWindow: React.FC<AppWindowProps> = ({
         onDoubleClick={onMaximize}
       >
         <div className="flex items-center space-x-2">
-          <app.icon className="w-4 h-4" isSmall />
+          <Icon iconName={app.icon} className="w-4 h-4" isSmall />
           <span className="text-xs font-medium truncate">{app.title}</span>
         </div>
         <div className="flex items-center space-x-1">
-          <button onClick={onMinimize} className="p-1.5 hover:bg-white/20 rounded-sm" title="Minimize"><MinimizeIcon /></button>
+          <button onClick={onMinimize} className="p-1.5 hover:bg-white/20 rounded-sm" title="Minimize"><Icon iconName="minimize" className="w-4 h-4" /></button>
           <button onClick={onMaximize} className="p-1.5 hover:bg-white/20 rounded-sm" title={app.isMaximized ? "Restore" : "Maximize"}>
-            {app.isMaximized ? <RestoreIcon /> : <MaximizeIcon />}
+            <Icon iconName={app.isMaximized ? "restore" : "maximize"} className="w-4 h-4" />
           </button>
-          <button onClick={onClose} className="p-1.5 hover:bg-red-500/80 rounded-sm" title="Close"><CloseIcon /></button>
+          <button onClick={onClose} className="p-1.5 hover:bg-red-500/80 rounded-sm" title="Close"><Icon iconName="close" className="w-4 h-4" /></button>
         </div>
       </div>
 

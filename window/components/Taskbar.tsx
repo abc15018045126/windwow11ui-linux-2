@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { OpenApp } from '../types';
 import { DiscoveredAppDefinition, AppContext } from '../contexts/AppContext';
-import { APP_DEFINITIONS } from '../../components/apps';
-import { StartIcon, TASKBAR_HEIGHT, FileGenericIcon } from '../constants';
+import { TASKBAR_HEIGHT } from '../constants';
 import { useTheme } from '../theme';
+import Icon from './icon';
 
 interface TaskbarProps {
   openApps: OpenApp[];
@@ -11,14 +11,6 @@ interface TaskbarProps {
   onToggleStartMenu: () => void;
   onAppIconClick: (app: DiscoveredAppDefinition, instanceId?: string) => void;
 }
-
-const getIconComponent = (iconId?: string) => {
-    if (iconId) {
-        const appDef = APP_DEFINITIONS.find(def => def.id === iconId);
-        if (appDef) return appDef.icon;
-    }
-    return FileGenericIcon;
-};
 
 const Taskbar: React.FC<TaskbarProps> = ({ openApps, activeAppInstanceId, onToggleStartMenu, onAppIconClick }) => {
   const { apps: discoveredApps } = useContext(AppContext);
@@ -34,14 +26,12 @@ const Taskbar: React.FC<TaskbarProps> = ({ openApps, activeAppInstanceId, onTogg
     const items = new Map<string, { appDef: DiscoveredAppDefinition, instance?: OpenApp }>();
     const openAppMap = new Map(openApps.map(app => [app.id, app]));
 
-    // Add pinned apps first
     const pinnedApps = discoveredApps.filter(app => app.isPinned);
     pinnedApps.forEach(appDef => {
       const key = appDef.appId || appDef.path!;
       items.set(key, { appDef, instance: openAppMap.get(key) });
     });
 
-    // Add any open apps that are not pinned
     openApps.forEach(openApp => {
       const key = openApp.id;
       if (!items.has(key)) {
@@ -61,7 +51,6 @@ const Taskbar: React.FC<TaskbarProps> = ({ openApps, activeAppInstanceId, onTogg
       className={`flex items-center justify-between px-4 fixed bottom-0 left-0 right-0 z-50 ${theme.taskbar.background} ${theme.taskbar.textColor}`}
       style={{ height: `${TASKBAR_HEIGHT}px` }}
     >
-      {/* Centered Icons */}
       <div className="flex-1 flex justify-center items-center h-full">
         <div className="flex items-center space-x-2 h-full">
           <button
@@ -69,14 +58,13 @@ const Taskbar: React.FC<TaskbarProps> = ({ openApps, activeAppInstanceId, onTogg
             className={`taskbar-start-button p-2 rounded h-full flex items-center ${theme.taskbar.buttonHover}`}
             aria-label="Start Menu"
           >
-            <StartIcon className="w-5 h-5 text-blue-400" />
+            <Icon iconName="start" className="w-5 h-5 text-blue-400" />
           </button>
 
           {taskbarItems.map(({ appDef, instance }) => {
             const isActive = instance?.instanceId === activeAppInstanceId && !instance?.isMinimized;
             const isMinimized = instance?.isMinimized;
             const isOpen = !!instance;
-            const IconComponent = getIconComponent(appDef.icon);
 
             return (
               <button
@@ -87,7 +75,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ openApps, activeAppInstanceId, onTogg
                             ${isMinimized ? 'opacity-70' : ''}`}
                 title={appDef.name}
               >
-                <IconComponent className="w-5 h-5" isSmall />
+                <Icon iconName={appDef.icon} className="w-5 h-5" isSmall />
                 {isOpen && (
                   <span className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4 h-1 rounded-t-sm 
                                   ${isActive ? theme.taskbar.activeIndicator : isMinimized ? 'bg-gray-400' : 'bg-gray-500'}`}></span>
@@ -98,7 +86,6 @@ const Taskbar: React.FC<TaskbarProps> = ({ openApps, activeAppInstanceId, onTogg
         </div>
       </div>
 
-      {/* System Tray - right aligned */}
       <div className="flex items-center space-x-3 text-xs">
         <div>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
         <div>{currentTime.toLocaleDateString([], { month: 'short', day: 'numeric' })}</div>
