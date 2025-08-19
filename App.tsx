@@ -313,12 +313,16 @@ const App: React.FC = () => {
                   toggleMinimizeApp(instanceId);
               }
             } else {
-              openApp(appId);
+              const appInfo = discoveredApps.find(app => app.appId === appId);
+              if (appInfo) {
+                openApp(appInfo);
+              }
             }
           }}
         />
       </div>
     </ThemeContext.Provider>
+  </AppContext.Provider>
   );
 };
 
