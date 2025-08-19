@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo, useContext } from 'react';
 import { FilesystemItem, AppComponentProps, ClipboardItem } from '../types';
 import * as FsService from '../services/filesystemService';
 import ContextMenu, { ContextMenuItem } from './ContextMenu';
 import { TASKBAR_HEIGHT } from '../constants';
 import { FolderIcon, FileCodeIcon, FileJsonIcon, FileGenericIcon, NotebookIcon } from '../constants';
 import { APP_DEFINITIONS } from './apps';
+import { AppContext } from './AppContext';
 
 
 const GRID_SIZE = 90;
@@ -20,19 +21,33 @@ interface DesktopProps extends Pick<AppComponentProps, 'openApp' | 'clipboard' |
 
 
 const getFileIcon = (item: FilesystemItem) => {
-    const appDef = APP_DEFINITIONS.find(def => def.id === item.name.replace('.app','').replace(' ', '').toLowerCase());
-    if (appDef) return <appDef.icon className="w-10 h-10 mb-1 pointer-events-none" />;
+    if (item.name.endsWith('.app') && item.content) {
+        try {
+            const appInfo = JSON.parse(item.content);
+            if (appInfo.icon) {
+                const appDef = APP_DEFINITIONS.find(def => def.id === appInfo.icon);
+                if (appDef) return <appDef.icon className="w-10 h-10 mb-1 pointer-events-none" />;
+            }
+        } catch (e) { /* Fallback to generic icon on parse error */ }
+    } else if (item.type === 'folder') {
+        // This case is handled in the main render function, but added for clarity
+        return <FolderIcon className="w-10 h-10 text-amber-400" />;
+    }
 
+    // Fallback for other file types or if app icon not found
     const filename = item.name;
     if (filename.endsWith('.tsx') || filename.endsWith('.ts')) return <FileCodeIcon className="w-10 h-10 text-cyan-400" />;
     if (filename.endsWith('.json')) return <FileJsonIcon className="w-10 h-10 text-yellow-400" />;
     if (filename.endsWith('.html')) return <FileCodeIcon className="w-10 h-10 text-orange-500" />;
     if (filename.endsWith('.txt') || filename.endsWith('.md')) return <NotebookIcon isSmall className="w-10 h-10 text-zinc-300" />;
+
+    // Default generic icon
     return <FileGenericIcon className="w-10 h-10 text-zinc-400" />;
 }
 
 
 const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handleCut, handlePaste }) => {
+  const { apps } = useContext(AppContext);
   const [icons, setIcons] = useState<DesktopIconState[]>([]);
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
   const [draggingIcon, setDraggingIcon] = useState<{ id: string; offset: { x: number; y: number } } | null>(null);
@@ -125,7 +140,17 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
     if (item.name.endsWith('.app') && item.content) {
         try {
             const appInfo = JSON.parse(item.content);
-            openApp?.(appInfo.appId);
+            if (appInfo.external) {
+                // @ts-ignore
+                if (window.electronAPI?.launchExternalApp) {
+                    // @ts-ignore
+                    window.electronAPI.launchExternalApp(appInfo.path);
+                } else {
+                    alert('Launching external apps is only supported in the desktop version.');
+                }
+            } else {
+                openApp?.(appInfo);
+            }
         } catch(e) { console.error("Could not parse app shortcut", e); }
     } else if (item.type === 'file') {
         openApp?.('notebook', { file: { path: item.path, name: item.name } });
@@ -175,18 +200,40 @@ const Desktop: React.FC<DesktopProps> = ({ openApp, clipboard, handleCopy, handl
     }
     
     if (selectedItem && handleCopy && handleCut) {
-      return [
-        { type: 'item', label: 'Open', onClick: () => handleDoubleClick(selectedItem) },
-        { type: 'separator' },
-        { type: 'item', label: 'Cut', onClick: () => handleCut(selectedItem) },
-        { type: 'item', label: 'Copy', onClick: () => handleCopy(selectedItem) },
-        { type: 'separator' },
-        { type: 'item', label: 'Delete', onClick: async () => { await FsService.deleteItem(selectedItem); fetchDesktopItems(); } },
-        { type: 'item', label: 'Rename', onClick: () => { 
-            setRenamingIconId(selectedIconState.id); 
-            setRenameValue(selectedItem.name);
-        } },
-      ];
+      const menuItems: ContextMenuItem[] = [];
+
+      if (selectedItem.type === 'file') {
+        // Default "Open"
+        menuItems.push({ type: 'item', label: 'Open', onClick: () => handleDoubleClick(selectedItem) });
+
+        // "Open with..." options
+        const fileHandlers = apps.filter(app => app.handlesFiles);
+        if (fileHandlers.length > 0) {
+          menuItems.push({ type: 'separator' });
+          fileHandlers.forEach(app => {
+            menuItems.push({
+              type: 'item',
+              label: `Open with ${app.name}`,
+              onClick: () => openApp?.(app, { file: selectedItem }),
+            });
+          });
+        }
+      } else {
+        // For folders and .app files
+        menuItems.push({ type: 'item', label: 'Open', onClick: () => handleDoubleClick(selectedItem) });
+      }
+
+      menuItems.push({ type: 'separator' });
+      menuItems.push({ type: 'item', label: 'Cut', onClick: () => handleCut(selectedItem) });
+      menuItems.push({ type: 'item', label: 'Copy', onClick: () => handleCopy(selectedItem) });
+      menuItems.push({ type: 'separator' });
+      menuItems.push({ type: 'item', label: 'Delete', onClick: async () => { await FsService.deleteItem(selectedItem); fetchDesktopItems(); } });
+      menuItems.push({ type: 'item', label: 'Rename', onClick: () => {
+          setRenamingIconId(selectedIconState.id);
+          setRenameValue(selectedItem.name);
+      } });
+
+      return menuItems;
     } else if (handlePaste) {
       return [
         { type: 'item', label: 'New Folder', onClick: createNewFolder },
