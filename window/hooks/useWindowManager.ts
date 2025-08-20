@@ -11,14 +11,16 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
   const [discoveredApps, setDiscoveredApps] = useState<DiscoveredAppDefinition[]>([]);
 
   useEffect(() => {
-    const discoveredApps = APP_DEFINITIONS.map(appDef => ({
-      appId: appDef.id,
-      name: appDef.name,
-      icon: appDef.icon,
-      path: '', // Not an external app
-      external: false,
-    }));
-    setDiscoveredApps(discoveredApps);
+    const fetchApps = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/apps');
+        const apps = await response.json();
+        setDiscoveredApps(apps);
+      } catch (error) {
+        console.error("Failed to fetch apps:", error);
+      }
+    };
+    fetchApps();
   }, []);
 
   const getNextPosition = (appWidth: number, appHeight: number) => {
@@ -40,7 +42,7 @@ export const useWindowManager = (desktopRef: React.RefObject<HTMLDivElement>) =>
     let appInfo: DiscoveredAppDefinition | undefined;
 
     if (typeof appIdentifier === 'string') {
-      appInfo = discoveredApps.find(app => app.appId.toLowerCase() === appIdentifier.toLowerCase());
+      appInfo = discoveredApps.find(app => app.appId === appIdentifier);
     } else {
       appInfo = appIdentifier;
     }

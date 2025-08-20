@@ -20,6 +20,11 @@ router.get('/list', async (req, res) => {
                     path: path.join(relativePath, file).replace(/\\/g, '/'),
                     type: stats.isDirectory() ? 'folder' : 'file',
                 };
+                if (file.endsWith('.app')) {
+                    try {
+                        item.content = await fs.promises.readFile(itemPath, 'utf-8');
+                    } catch (e) { /* ignore */ }
+                }
                 return item;
             })
         );
@@ -124,6 +129,19 @@ router.post('/create-file', async (req, res) => {
     } catch (error) {
         console.error(`API Error creating file:`, error);
         res.status(500).json({ error: 'Failed to create file' });
+    }
+});
+
+router.post('/create-shortcut', async (req, res) => {
+    try {
+        const { appId, appName } = req.body;
+        const shortcutPath = resolvePath(path.join('Desktop', `${appName}.app`));
+        const shortcutContent = JSON.stringify({ appId });
+        await fs.promises.writeFile(shortcutPath, shortcutContent, 'utf-8');
+        res.json({ success: true });
+    } catch (error) {
+        console.error(`API Error creating shortcut:`, error);
+        res.status(500).json({ error: 'Failed to create shortcut' });
     }
 });
 
