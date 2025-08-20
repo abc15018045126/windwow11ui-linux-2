@@ -1,21 +1,22 @@
-import type { AppDefinition } from '@kernel/types';
 
-import { appDefinition as aboutAppDefinition } from '@apps/About/About';
-import { appDefinition as fileExplorerAppDefinition } from '../../window/components/FileExplorer/FileExplorer';
-import { appDefinition as geminiChatAppDefinition } from '@apps/GeminiChat/GeminiChat';
-import { appDefinition as hyperAppDefinition } from '@apps/Hyper/Hyper';
-import { appDefinition as notebookAppDefinition } from '../../window/components/apps/Notebook/Notebook';
-import { appDefinition as settingsAppDefinition } from '../../window/components/Settings/Settings';
-import { appDefinition as chromeAppDefinition } from '@apps/Chrome/Chrome';
-import { appDefinition as chrome2AppDefinition } from '@apps/Chrome2/Chrome2';
-import { appDefinition as chrome3AppDefinition } from '@apps/Chrome3/Chrome3';
-import { appDefinition as chrome4AppDefinition } from '@apps/Chrome4/Chrome4';
-import { appDefinition as terminusAppDefinition } from '@apps/Terminus/Terminus';
-import { appDefinition as terminusSshAppDefinition } from '../../window/components/apps/TerminusSsh/TerminusSsh';
-import { appDefinition as sftpAppDefinition } from '../../window/components/apps/SFTP/SFTP';
-import { appDefinition as appStoreAppDefinition } from '../../window/components/AppStore/AppStore';
-import { appDefinition as themeAppDefinition } from '@apps/Theme/Theme';
-import { appDefinition as propertiesAppDefinition } from '@apps/Properties/Properties';
+
+import type { AppDefinition } from '../../types';
+
+import { appDefinition as aboutAppDefinition } from './AboutApp';
+import { appDefinition as fileExplorerAppDefinition } from './FileExplorerApp';
+import { appDefinition as geminiChatAppDefinition } from './GeminiChatApp';
+import { appDefinition as hyperAppDefinition } from './HyperApp';
+import { appDefinition as notebookAppDefinition } from './NotebookApp';
+import { appDefinition as settingsAppDefinition } from './SettingsApp';
+import { appDefinition as chromeAppDefinition } from './ChromeApp';
+import { appDefinition as chrome2AppDefinition } from './Chrome2App';
+import { appDefinition as chrome3AppDefinition } from './Chrome3App'; // Restored Chrome 3
+import { appDefinition as chrome4AppDefinition } from './Chrome4App';
+import { appDefinition as terminusAppDefinition } from './TerminusApp';
+import { appDefinition as terminusSshAppDefinition } from './TerminusSshApp';
+import { appDefinition as sftpAppDefinition } from './SFTPApp';
+import { appDefinition as appStoreAppDefinition } from './AppStoreApp';
+import { appDefinition as themeAppDefinition } from './ThemeApp';
 
 /**
  * The master list of all applications available in the OS.
@@ -40,5 +41,4 @@ export const APP_DEFINITIONS: AppDefinition[] = [
   settingsAppDefinition,
   notebookAppDefinition,
   aboutAppDefinition,
-  propertiesAppDefinition,
 ];

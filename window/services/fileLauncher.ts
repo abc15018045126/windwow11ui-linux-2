@@ -37,14 +37,6 @@ export const openFile = async (
 
   // Handle folders
   if (item.type === 'folder') {
-    // Check if the folder is an application
-    const dirItems = await FsService.listDirectory(item.path);
-    const appFile = dirItems.find(i => i.name === `${item.name}.tsx`);
-    if (appFile) {
-      openApp(item.name);
-      return;
-    }
-
     if (navigateTo) {
       navigateTo(item.path);
     } else {
@@ -53,6 +45,13 @@ export const openFile = async (
     return;
   }
 
+  // Handle application shortcuts
+  if (item.name.endsWith('.app') && item.content) {
+    try {
+      openApp(JSON.parse(item.content));
+    } catch (e) { console.error("Could not parse app shortcut", e); }
+    return;
+  }
 
   // Handle regular files (default to Notebook)
   if (item.type === 'file') {
