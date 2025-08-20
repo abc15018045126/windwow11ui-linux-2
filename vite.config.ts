@@ -4,14 +4,15 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'),
-      '@kernel': path.resolve(__dirname, './window'),
-      '@apps': path.resolve(__dirname, './components/apps'),
+      '@kernel': path.resolve(__dirname, './src/window'),
+      '@components': path.resolve(__dirname, './src/components'),
+      '@services': path.resolve(__dirname, './services'),
     },
   },
+  plugins: [react()],
   base: './',
   build: {
     outDir: 'dist',
