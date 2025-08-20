@@ -1,19 +1,15 @@
-import React, { useState, useEffect, useMemo, useCallback, useContext } from 'react';
-import { AppComponentProps, FilesystemItem } from '@kernel/types';
-import * as FsService from '@/services/filesystemService';
-import ContextMenu, { ContextMenuItem } from '@kernel/components/ContextMenu';
-import Icon from '@kernel/components/icon';
-import { AppContext } from '@kernel/contexts/AppContext';
-import { buildContextMenu } from '@kernel/components/file/right-click';
-import { openFile } from '@kernel/services/fileLauncher';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { AppDefinition, AppComponentProps, FilesystemItem } from '../../types';
+import * as FsService from '../../services/filesystemService';
+import { FolderIcon, FileCodeIcon, FileJsonIcon, FileGenericIcon, StarIcon, NotebookIcon, FileExplorerIcon } from '../../constants';
+import ContextMenu, { ContextMenuItem } from '../ContextMenu';
 
-const getFileIconName = (filename: string): string => {
-    if (filename.endsWith('.app')) return 'fileGeneric';
-    if (filename.endsWith('.lnk.json')) return 'fileGeneric'; // Could be a specific shortcut icon later
-    if (filename.endsWith('.tsx') || filename.endsWith('.ts') || filename.endsWith('.html')) return 'fileCode';
-    if (filename.endsWith('.json')) return 'fileJson';
-    if (filename.endsWith('.txt') || filename.endsWith('.md')) return 'notebook';
-    return 'fileGeneric';
+const getFileIcon = (filename: string) => {
+    if (filename.endsWith('.app')) return <FileGenericIcon className="w-12 h-12 text-blue-400" />;
+    if (filename.endsWith('.tsx') || filename.endsWith('.ts') || filename.endsWith('.html')) return <FileCodeIcon className="w-12 h-12 text-cyan-400" />;
+    if (filename.endsWith('.json')) return <FileJsonIcon className="w-12 h-12 text-yellow-400" />;
+    if (filename.endsWith('.txt') || filename.endsWith('.md')) return <NotebookIcon isSmall className="w-12 h-12 text-zinc-300" />;
+    return <FileGenericIcon className="w-12 h-12 text-zinc-400" />;
 }
 
 const SidebarItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; isActive: boolean }> = ({ icon, label, onClick, isActive }) => (
@@ -33,7 +29,6 @@ const FileExplorerApp: React.FC<AppComponentProps> = ({
     handleCut,
     handlePaste,
 }) => {
-    const { apps } = useContext(AppContext);
     const startPath = initialData?.initialPath || '/';
     const [currentPath, setCurrentPath] = useState(startPath);
     const [history, setHistory] = useState([startPath]);
@@ -93,7 +88,16 @@ const FileExplorerApp: React.FC<AppComponentProps> = ({
     
     const openItem = useCallback((item: FilesystemItem) => {
         if (renamingItemPath === item.path) return;
-        openFile(item, openApp!, navigateTo);
+        if (item.type === 'folder') {
+            navigateTo(item.path);
+        } else if (item.name.endsWith('.app') && item.content) {
+            try {
+                const appInfo = JSON.parse(item.content);
+                openApp?.(appInfo.appId);
+            } catch (e) { console.error("Could not parse app shortcut", e); }
+        } else if (item.type === 'file') {
+            openApp?.('notebook', { file: { path: item.path, name: item.name } });
+        }
     }, [navigateTo, openApp, renamingItemPath]);
     
     const handleItemContextMenu = (e: React.MouseEvent, item: FilesystemItem) => {
@@ -119,28 +123,42 @@ const FileExplorerApp: React.FC<AppComponentProps> = ({
 
     const contextMenuItems = useMemo<ContextMenuItem[]>(() => {
         if (!contextMenu) return [];
-        const openAppHandler = openApp || (() => {});
+        const { item } = contextMenu;
 
-        let menuItems = buildContextMenu({
-            clickedItem: contextMenu.item,
-            currentPath: currentPath,
-            apps,
-            refresh: fetchItems,
-            openApp: openAppHandler,
-            onRename: (item) => { setRenamingItemPath(item.path); setRenameValue(item.name); },
-            onCopy: handleCopy!,
-            onCut: handleCut!,
-            onPaste: handlePaste!,
-            onOpen: openItem,
-            isPasteDisabled: !clipboard,
-        });
-
-        if (!contextMenu.item) {
-            menuItems.push({ type: 'separator' });
-            menuItems.push({ type: 'item', label: 'Refresh', onClick: fetchItems });
+        if (item && handleCopy && handleCut) {
+            return [
+                { type: 'item', label: 'Open', onClick: () => openItem(item) },
+                { type: 'separator' },
+                { type: 'item', label: 'Cut', onClick: () => handleCut(item) },
+                { type: 'item', label: 'Copy', onClick: () => handleCopy(item) },
+                { type: 'separator' },
+                { type: 'item', label: 'Delete', onClick: async () => { await FsService.deleteItem(item); fetchItems(); } },
+                { type: 'item', label: 'Rename', onClick: () => {
+                    setRenamingItemPath(item.path);
+                    setRenameValue(item.name);
+                }},
+            ];
+        } else if (handlePaste) {
+            const createNewFolder = async () => {
+                const name = await FsService.findUniqueName(currentPath, "New folder", true);
+                await FsService.createFolder(currentPath, name);
+                fetchItems();
+            }
+             const createNewFile = async () => {
+                const name = await FsService.findUniqueName(currentPath, "New Text Document", false, ".txt");
+                await FsService.createFile(currentPath, name, "");
+                fetchItems();
+            }
+            return [
+                { type: 'item', label: 'New Folder', onClick: createNewFolder },
+                { type: 'item', label: 'New Text File', onClick: createNewFile },
+                { type: 'separator' },
+                { type: 'item', label: 'Paste', onClick: () => handlePaste(currentPath), disabled: !clipboard },
+                { type: 'item', label: 'Refresh', onClick: fetchItems },
+            ];
         }
-        return menuItems;
-    }, [contextMenu, openItem, handleCopy, handleCut, handlePaste, clipboard, currentPath, fetchItems, openApp, apps]);
+        return [];
+    }, [contextMenu, openItem, handleCopy, handleCut, handlePaste, clipboard, currentPath, fetchItems]);
 
 
     const breadcrumbs = ['Project Root', ...currentPath.split('/').filter(p => p)];
@@ -150,21 +168,22 @@ const FileExplorerApp: React.FC<AppComponentProps> = ({
     };
 
     const quickAccessItems = [
-        { path: '/', label: 'Project Root', iconName: 'fileExplorer' },
-        { path: '/Desktop', label: 'Desktop', iconName: 'folder' },
-        { path: '/Documents', label: 'Documents', iconName: 'folder' },
-        { path: '/Downloads', label: 'Downloads', iconName: 'folder' },
+        { path: '/', label: 'Project Root', icon: <FileExplorerIcon isSmall className="w-5 h-5 text-blue-400"/> },
+        { path: '/Desktop', label: 'Desktop', icon: <FolderIcon className="w-5 h-5 text-amber-400" isSmall/> },
+        { path: '/Documents', label: 'Documents', icon: <FolderIcon className="w-5 h-5 text-amber-400" isSmall/> },
+        { path: '/Downloads', label: 'Downloads', icon: <FolderIcon className="w-5 h-5 text-amber-400" isSmall/> },
     ];
     
     return (
         <div className="flex h-full bg-black text-zinc-200 select-none" onClick={() => setContextMenu(null)}>
+            {/* Sidebar */}
             <aside className="w-56 flex-shrink-0 bg-zinc-900/50 p-2 flex flex-col border-r border-zinc-800">
                 <h3 className="px-2 pb-2 text-xs font-semibold text-zinc-400">Quick access</h3>
                 <div className="space-y-1">
                     {quickAccessItems.map(item => (
                         <SidebarItem 
                             key={item.path}
-                            icon={<Icon iconName={item.iconName} isSmall className="w-5 h-5" />}
+                            icon={item.icon}
                             label={item.label}
                             onClick={() => navigateTo(item.path)}
                             isActive={currentPath === item.path}
@@ -204,7 +223,7 @@ const FileExplorerApp: React.FC<AppComponentProps> = ({
                                     onContextMenu={(e) => handleItemContextMenu(e, item)}
                                     className="flex flex-col items-center p-2 rounded hover:bg-white/10 transition-colors text-center aspect-square relative focus:outline-none focus:bg-blue-500/30"
                                 >
-                                    <Icon iconName={item.type === 'folder' ? 'folder' : getFileIconName(item.name)} className="w-12 h-12" />
+                                    {item.type === 'folder' ? <FolderIcon className="w-12 h-12 text-amber-400" /> : getFileIcon(item.name)}
                                     {renamingItemPath === item.path ? (
                                         <input 
                                             type="text"
@@ -244,9 +263,10 @@ const FileExplorerApp: React.FC<AppComponentProps> = ({
 export const appDefinition: AppDefinition = {
     id: 'fileExplorer',
     name: 'File Explorer',
-    icon: 'fileExplorer',
+    icon: FileExplorerIcon,
     component: FileExplorerApp,
     defaultSize: { width: 800, height: 600 },
+    isPinnedToTaskbar: true,
 };
 
 export default FileExplorerApp;
